@@ -3,8 +3,7 @@ Introduction
 
 This is a library for communicating with a wifi-enabled home thermostat made by
 `Warmup <https://www.warmup.co.uk/>`_. At the time of writing, this only 
-includes the `warmup 4IE
-<https://www.warmup.co.uk/thermostats/smart/4ie-underfloor-heating>`.
+includes the `warmup 4IE <https://www.warmup.co.uk/thermostats/smart/4ie-underfloor-heating>`_.
 
 Warmup Plc was not involved in the creation of this
 software and has not sanctioned or endorsed it in any way.
@@ -17,11 +16,43 @@ This software is available under Apache license. Please see LICENSE.txt.
 
 Usage
 =====
+The library is primary intended to interface the 4IE with home assistant, but may also be used standalone.
 
-Getting Started
+Home Assistant
 ---------------
+To setup this component, you need to register to warmup first.
+see https://my.warmup.com/login
 
-Import the library, and away we go.
+Then create a folder "*climate*" in your "*custom_components*" folder in your "*config*" dir and place `warmup4ie.py <https://github.com/alex-0103/warmup4IE/blob/master/climate/warmup4ie.py>`_ there.
+
+Then add to your
+configuration.yaml:
+
+.. code-block:: yaml
+
+  climate:
+    - platform: warmup4ie
+      name: YOUR_DESCRIPTION
+      username: YOUR_E_MAIL_ADDRESS
+      password: YOUR_PASSWORD
+      location: YOUR_LOCATION_NAME
+      room: YOUR_ROOM_NAME
+
+* **name** (optional): the description of the device, as seen by the user in the front end
+* **username** (required): the username used to login to the warmup web site
+* **password** (required): the password used to login to the warmup web site; may be moved to the secrets.yaml file. See `secrets <https://www.home-assistant.io/docs/configuration/secrets/>`_
+* **location** (required): the location name used in the warmup web site
+* **room** (required): the room name of the device used in the warmup web site
+
+After restarting home assistant, the component will be loaded automatically.
+
+Standalone
+----------
+You may install the library via pip using
+
+>>> pip install warmup4ie
+
+After that, import the library, and away we go.
 
     >>> import warmup4ie
     >>> device = warmup4ie.Warmup4IEDevice('<e-mail>', '<password>', 
@@ -42,9 +73,7 @@ has occured with.
 Supported Features
 ------------------
 
-Many of the features documented in the manufacturer's API reference do not seem
-to work. For example, /tstat/save_energy seems to be broken. This library
-should not implement those broken features.
+At the moment the library supports reading current temperature and setting the target temperature, switching between manual, automatic and frost protection mode, and switching the device off.
 
 Release Notes
 =============

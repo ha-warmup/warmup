@@ -5,6 +5,8 @@ This is a library for communicating with a wifi-enabled home thermostat made by
 `Warmup <https://www.warmup.co.uk/>`_. At the time of writing, this only 
 includes the `warmup 4IE <https://www.warmup.co.uk/thermostats/smart/4ie-underfloor-heating>`_.
 
+This code is inspired by a project for SmartThingsHub, see `here <https://github.com/alyc100/SmartThingsPublic/blob/master/devicetypes/alyc100/warmup-4ie.src/warmup-4ie.groovy>`_. Many Thanks to alyc100 for the great work!
+
 Warmup Plc was not involved in the creation of this
 software and has not sanctioned or endorsed it in any way.
 

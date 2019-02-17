@@ -29,11 +29,20 @@ climate:
 import logging
 import voluptuous as vol
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
-from homeassistant.components.climate.const import (SUPPORT_TARGET_TEMPERATURE,
+try:
+    from homeassistant.components.climate import (SUPPORT_TARGET_TEMPERATURE,
                                                     SUPPORT_AWAY_MODE,
                                                     SUPPORT_OPERATION_MODE,
                                                     SUPPORT_ON_OFF, STATE_AUTO,
                                                     STATE_MANUAL)
+except ImportError:
+    from homeassistant.components.climate.const import (
+                                                    SUPPORT_TARGET_TEMPERATURE,
+                                                    SUPPORT_AWAY_MODE,
+                                                    SUPPORT_OPERATION_MODE,
+                                                    SUPPORT_ON_OFF, STATE_AUTO,
+                                                    STATE_MANUAL)
+
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.exceptions import PlatformNotReady

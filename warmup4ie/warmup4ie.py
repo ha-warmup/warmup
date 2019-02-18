@@ -108,13 +108,17 @@ class Warmup4IEDevice():
             return False
         # extract and store roomId for later use
         rooms = response.json()['response']['rooms']
+        room_updated = False
         for room in rooms:
             if room['roomName'] == self._room_name:
                 self._room = room
                 _LOGGER.info("Successfully updated data for room '%s' "
                              "with ID %s", self._room['roomName'],
                              self._room['roomId'])
+                room_updated = True
                 break
+        if not room_updated:
+            return False
         # update temperatures values
         self._target_temperature = int(self._room['targetTemp'])/10
         self._target_temperature_low = int(self._room['minTemp'])/10

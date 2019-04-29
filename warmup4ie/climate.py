@@ -1,51 +1,24 @@
-r"""
-platform that offers a connection to a warmup4ie device.
-
-this platform is inspired by the following code:
-https://github.com/alyc100/SmartThingsPublic/tree/master/devicetypes/alyc100/\
-warmup-4ie.src
-
-to setup this component, you need to register to warmup first.
-see
-https://my.warmup.com/login
-
-Then add to your
-configuration.yaml
-
-climate:
-  - platform: warmup4ie
-    name: YOUR_DESCRIPTION
-    username: YOUR_E_MAIL_ADDRESS
-    password: YOUR_PASSWORD
-    location: YOUR_LOCATION_NAME
-    room: YOUR_ROOM_NAME
-
-# the following issues are not yet implemented, since i have currently no need
-# for them
-# OPEN  - holiday mode still missing
-#       - commands for setting/retrieving programmed times missing
-"""
+"""platform that offers a connection to a warmup4ie device."""
 
 import logging
-import voluptuous as vol
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
-try:
-    from homeassistant.components.climate import (SUPPORT_TARGET_TEMPERATURE,
-                                                  SUPPORT_AWAY_MODE,
-                                                  SUPPORT_OPERATION_MODE,
-                                                  SUPPORT_ON_OFF, STATE_AUTO,
-                                                  STATE_MANUAL)
-except ImportError:
-    from homeassistant.components.climate.const import (
-        SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
-        SUPPORT_ON_OFF, STATE_AUTO, STATE_MANUAL)
 
+import voluptuous as vol
+
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
+    ATTR_TEMPERATURE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME, CONF_ROOM,
+    TEMP_CELSIUS)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['warmup4ie==0.1.1']
+from homeassistant.components.climate import (SUPPORT_TARGET_TEMPERATURE,
+                                                    SUPPORT_AWAY_MODE,
+                                                    SUPPORT_OPERATION_MODE,
+                                                    SUPPORT_ON_OFF, STATE_AUTO,
+                                                    STATE_MANUAL)
+
+
+REQUIREMENTS = ['warmup4ie>=0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +26,6 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE |
                  SUPPORT_OPERATION_MODE | SUPPORT_ON_OFF)
 
 CONF_LOCATION = 'location'
-CONF_ROOM = 'room'
 CONF_TARGET_TEMP = 'target_temp'
 
 
@@ -71,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
+# pylint: disable=no-member
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo climate devices."""
     name = config.get(CONF_NAME)
@@ -81,19 +53,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     room = config.get(CONF_ROOM)
     target_temp = config.get(CONF_TARGET_TEMP)
 
+    import warmup4ie
+    device = warmup4ie.Warmup4IEDevice(user, password, location, room,
+                                       target_temp)
+    if device is None or not device.setup_finished:
+        raise PlatformNotReady
+
     add_entities(
-        [Warmup4IE(hass, name, user, password, location, room, target_temp)])
+        [Warmup4IE(hass, name, device, user, password, location, room,
+                   target_temp)])
 
 
-# pylint: disable=abstract-method
-# pylint: disable=too-many-instance-attributes
-# pylint: disable=import-self
-# pylint: disable=no-member
 class Warmup4IE(ClimateDevice):
     """Representation of a Warmup4IE device."""
 
-    # pylint: disable-msg=too-many-arguments
-    def __init__(self, hass, name, user, password, location,
+    def __init__(self, hass, name, device, user, password, location,
                  room, target_temp):
         """Initialize the climate device."""
         _LOGGER.info("Setting up Warmup4IE component")
@@ -104,12 +78,7 @@ class Warmup4IE(ClimateDevice):
         self._away = False
         self._on = True
         self._current_operation_mode = STATE_MANUAL
-
-        import warmup4ie
-        self._device = warmup4ie.Warmup4IEDevice(
-            user, password, location, room, target_temp)
-        if self._device is None or not self._device.setup_finished:
-            raise PlatformNotReady
+        self._device = device
 
     @property
     def supported_features(self):
@@ -218,13 +187,20 @@ class Warmup4IE(ClimateDevice):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        self._device.update_room()
+        if not self._device.update_room():
+            _LOGGER.error("updating Warmup4IE component failed.")
 
         # set operation mode
         mode_map = {'prog': STATE_AUTO, 'fixed': STATE_MANUAL}
         self._current_operation_mode = mode_map.get(
             self._device.get_run_mode(), STATE_MANUAL)
 
+        # set whether device is in away mode
+        if self._device.get_run_mode() == 'away':
+            self._away = True
+        else:
+            self._away = False
+        
         # set whether device is on/off
         if self._device.get_run_mode() == 'off':
             self._on = False

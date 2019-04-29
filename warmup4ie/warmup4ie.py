@@ -38,7 +38,8 @@ class Warmup4IEDevice():
     and made available on PyPi.
     Perhaps later....
     """
-    URL = 'https://api.warmup.com/apps/app/v1'
+    TOKEN_URL = 'https://api.warmup.com/apps/app/v1'
+    URL = 'https://apil.warmup.com/graphql'
     APP_TOKEN = \
         'M=;He<Xtg"$}4N%5k{$:PD+WA"]D<;#PriteY|VTuA>_iyhs+vA"4lic{6-LqNM:'
     HEADER = {'user-agent': 'WARMUP_APP',
@@ -49,6 +50,11 @@ class Warmup4IEDevice():
               'app-token': APP_TOKEN,
               'app-version': '1.8.1',
               'accept-language': 'de-de'}
+    RUN_MODE = {0:'off',
+                1:'prog',
+                3:'fixed',
+                4:'frost',
+                5:'away'}
 
     #pylint: disable-msg=too-many-arguments
     def __init__(self, user, password, location, room, target_temp):
@@ -80,8 +86,49 @@ class Warmup4IEDevice():
         """return current mode, e.g. 'off', 'fixed', 'prog'."""
         if self._room is None:
             return 'off'
-        return self._room['runMode']
+        return self.RUN_MODE[self._room['runModeInt']]
 
+    def update_room(self):
+        """Update room/device data for the given room name.
+
+        """
+        # make sure the location is already configured
+        if self._loc_id is None or \
+                self._warmup_access_token is None or \
+                self._room_name is None:
+            return False
+
+        body = {
+                "query": "query QUERY{ user{ currentLocation: location { id name rooms{ id roomName runModeInt targetTemp currentTemp thermostat4ies {minTemp maxTemp}}  }}  } "
+        }
+        header_with_token = self.HEADER.copy()
+        header_with_token['warmup-authorization'] = str(self._warmup_access_token)
+        response = requests.post(url=self.URL, headers=header_with_token, json=body)
+        # check if request was acceppted and if request was successful
+        if response.status_code != 200 or \
+                response.json()['status'] != 'success':
+            _LOGGER.error("updating new room failed, %s", response)
+            return False
+        # extract and store roomId for later use
+        rooms = response.json()['data']['user']['currentLocation']['rooms']
+        room_updated = False
+        for room in rooms:
+            if room['roomName'] == self._room_name:
+                self._room = room
+                _LOGGER.info("Successfully updated data for room '%s' "
+                             "with ID %s", self._room['roomName'],
+                             self._room['id'])
+                room_updated = True
+                break
+        if not room_updated:
+            return False
+        # update temperatures values
+        self._target_temperature = int(self._room['targetTemp'])/10
+        self._target_temperature_low = int(self._room['thermostat4ies'][0]['minTemp'])/10
+        self._target_temperature_high = int(self._room['thermostat4ies'][0]['maxTemp'])/10
+        self._current_temperature = int(self._room['currentTemp'])/10
+        return True
+    '''
     def update_room(self):
         """Update room/device data for the given room name.
 
@@ -100,7 +147,7 @@ class Warmup4IEDevice():
                 "method": "getRooms",
                 "locId": self._loc_id}
         }
-        response = requests.post(url=self.URL, headers=self.HEADER, json=body)
+        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
         # check if request was acceppted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':
@@ -125,7 +172,7 @@ class Warmup4IEDevice():
         self._target_temperature_high = int(self._room['maxTemp'])/10
         self._current_temperature = int(self._room['currentTemp'])/10
         return True
-
+    '''
     def get_target_temmperature(self):
         """return target temperature"""
         return self._target_temperature
@@ -151,7 +198,7 @@ class Warmup4IEDevice():
                  'appId': 'WARMUP-APP-V001'}
                 }
 
-        response = requests.post(url=self.URL, headers=self.HEADER, json=body)
+        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
         # check if request was acceppted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':
@@ -175,7 +222,7 @@ class Warmup4IEDevice():
                 "method": "getLocations"
             }
         }
-        response = requests.post(url=self.URL, headers=self.HEADER, json=body)
+        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
         # check if request was acceppted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':
@@ -206,14 +253,14 @@ class Warmup4IEDevice():
             },
             "request": {
                 "method": "setProgramme",
-                "roomId": self._room['roomId'],
+                "roomId": self._room['id'],
                 "roomMode": "fixed",
                 "fixed": {
                     "fixedTemp": "{:03d}".format(int(new_temperature * 10))
                 }
             }
         }
-        response = requests.post(url=self.URL, headers=self.HEADER, json=body)
+        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
         # check if request was acceppted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':
@@ -243,11 +290,11 @@ class Warmup4IEDevice():
             },
             "request": {
                 "method": "setProgramme",
-                "roomId": self._room['roomId'],
+                "roomId": self._room['id'],
                 "roomMode": "prog"
             }
         }
-        response = requests.post(url=self.URL, headers=self.HEADER, json=body)
+        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
         # check if request was acceppted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':
@@ -269,11 +316,11 @@ class Warmup4IEDevice():
             },
             "request": {
                 "method": "setProgramme",
-                "roomId": self._room['roomId'],
+                "roomId": self._room['id'],
                 "roomMode": "fixed"
             }
         }
-        response = requests.post(url=self.URL, headers=self.HEADER, json=body)
+        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
         # check if request was acceppted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':
@@ -308,7 +355,7 @@ class Warmup4IEDevice():
                 }
             }
         }
-        response = requests.post(url=self.URL, headers=self.HEADER, json=body)
+        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
         # check if request was acceppted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':
@@ -341,7 +388,7 @@ class Warmup4IEDevice():
                 }
             }
         }
-        response = requests.post(url=self.URL, headers=self.HEADER, json=body)
+        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
         # check if request was acceppted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':

@@ -1,1 +1,1 @@
-from .warmup4ie import Warmup4IEDevice
+"""The warmup4ie component."""

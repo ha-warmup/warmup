@@ -1,10 +1,10 @@
 {
-  "domain": "warmup4ie",
-  "name": "Warmup4IE",
+  "domain": "warmup4ie_new",
+  "name": "Warmup4IE new",
   "documentation": "https://www.home-assistant.io/components/warmup4ie",
+  "dependencies": [],
+  "codeowners": [],
   "requirements": [
     "warmup4ie==0.1.3"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  ]
 }

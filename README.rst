@@ -25,7 +25,7 @@ Home Assistant
 To setup this component, you need to register to warmup first.
 see https://my.warmup.com/login
 
-Then create a folder "*warmup*" in your "*custom_components*" folder in your "*config*" dir and place `climate.py <https://github.com/alex-0103/warmup4IE/blob/master/warmup_cc/climate.py>`_ there.
+Then copy the folder `warmup_cc <https://github.com/alex-0103/warmup4IE/blob/master/warmup_cc>`_ to your "*custom_components*" folder in your "*config*" dir.
 
 Then add to your
 configuration.yaml:

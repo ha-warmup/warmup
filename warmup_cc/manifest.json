@@ -1,0 +1,10 @@
+{
+  "domain": "warmup_cc",
+  "name": "Warmup",
+  "documentation": [],
+  "dependencies": [],
+  "codeowners": [],
+  "requirements": [
+    "warmup4ie==0.1.3"
+  ]
+}

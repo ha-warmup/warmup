@@ -25,7 +25,7 @@ Home Assistant
 To setup this component, you need to register to warmup first.
 see https://my.warmup.com/login
 
-Then create a folder "*climate*" in your "*custom_components*" folder in your "*config*" dir and place `warmup4ie.py <https://github.com/alex-0103/warmup4IE/blob/master/climate/warmup4ie.py>`_ there.
+Then create a folder "*warmup*" in your "*custom_components*" folder in your "*config*" dir and place `climate.py <https://github.com/alex-0103/warmup4IE/blob/master/warmup_cc/climate.py>`_ there.
 
 Then add to your
 configuration.yaml:
@@ -33,7 +33,7 @@ configuration.yaml:
 .. code-block:: yaml
 
   climate:
-    - platform: warmup4ie
+    - platform: warmup_cc
       name: YOUR_DESCRIPTION
       username: YOUR_E_MAIL_ADDRESS
       password: YOUR_PASSWORD
@@ -84,3 +84,19 @@ Release Notes
 -----
 
 - inital release
+
+0.1.1
+-----
+
+- bug fixes
+
+0.1.2
+-----
+
+- bug fixes
+
+0.1.3
+-----
+
+- changed http-request to use the new api.
+- adapted file names to comply with the new naming structure of HA introduced with 0.92

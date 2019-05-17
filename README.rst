@@ -100,3 +100,8 @@ Release Notes
 
 - changed http-request to use the new api.
 - adapted file names to comply with the new naming structure of HA introduced with 0.92
+
+0.1.4
+-----
+
+- added functionality to allow configuration of Warmup4IE thermostat via HA UI Config entry.

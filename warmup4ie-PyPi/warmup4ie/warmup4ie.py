@@ -28,6 +28,7 @@ climate:
 
 import logging
 import requests
+from collections import namedtuple
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class Warmup4IEDevice():
                 5:'away'}
 
     #pylint: disable-msg=too-many-arguments
-    def __init__(self, user, password, location, room, target_temp):
+    def __init__(self, user, password, location = None, room = None, target_temp = 0):
         """Initialize the climate device."""
         _LOGGER.info("Setting up Warmup4IE component")
         self._user = user
@@ -66,6 +67,7 @@ class Warmup4IEDevice():
         self._room_name = room
         self._target_temperature = target_temp
 
+        self._all_devices = None
         self._warmup_access_token = None
         self._loc_id = None
         self._room = None
@@ -76,7 +78,14 @@ class Warmup4IEDevice():
         self.setup_finished = False
         token_ok = self._generate_access_token()
 
-        location_ok = self._get_locations()
+        self._all_devices = self.get_all_devices()
+        
+        if self._all_devices is not None and self._location_name is None:
+            self._location_name = self._all_devices[0].loc_name
+        if self._all_devices is not None and self._room_name is None:
+            self._room_name = self._all_devices[0].room_name
+
+        location_ok = self._get_location_from_name()
 
         room_ok = self.update_room()
         if token_ok and location_ok and room_ok:
@@ -87,6 +96,45 @@ class Warmup4IEDevice():
         if self._room is None:
             return 'off'
         return self.RUN_MODE[self._room['runModeInt']]
+
+    def get_all_devices(self, update = False):
+        """Return all devices that are registered with this account.
+
+        """
+        if not update and self._all_devices is not None:
+            return self._all_devices
+        
+        # make sure we have an accessToken
+        if self._warmup_access_token is None:
+            return None
+
+        body = {
+                "query":"query QUERY{ user{ allLocations: locations{ id name rooms{ id roomName thermostat4ies{id deviceSN  } } }}  } "
+        }
+        header_with_token = self.HEADER.copy()
+        header_with_token['warmup-authorization'] = str(self._warmup_access_token)
+        response = requests.post(url=self.URL, headers=header_with_token, json=body)
+        # check if request was acceppted and if request was successful
+        if response.status_code != 200 or \
+                response.json()['status'] != 'success':
+            _LOGGER.error("updating new room failed, %s", response)
+            return None
+        # extract and store all devices
+        devices = list()
+        device = namedtuple('Device', 'loc_name loc_id room_name room_id thermostat_id thermostat_SN')
+        locations = response.json()['data']['user']['allLocations']
+
+        for location in locations:
+            for room in location['rooms']:
+                for thermostat in room['thermostat4ies']:
+                    devices.append(device(location["name"],location["id"],room["roomName"], room["id"],thermostat["id"],thermostat["deviceSN"]))
+                    _LOGGER.info("Found thermostat with SN %s ",thermostat["deviceSN"])
+        if len(devices):
+            _LOGGER.info("Found %i thermostats",len(devices))
+        else:
+            _LOGGER.error("No thermostats found!")
+            return None
+        return devices
 
     def update_room(self):
         """Update room/device data for the given room name.
@@ -128,51 +176,7 @@ class Warmup4IEDevice():
         self._target_temperature_high = int(self._room['thermostat4ies'][0]['maxTemp'])/10
         self._current_temperature = int(self._room['currentTemp'])/10
         return True
-    '''
-    def update_room(self):
-        """Update room/device data for the given room name.
 
-        """
-        # make sure the location is already configured
-        if self._loc_id is None or \
-                self._warmup_access_token is None or \
-                self._room_name is None:
-            return False
-
-        body = {
-            "account": {
-                "email": self._user,
-                "token": self._warmup_access_token},
-            "request": {
-                "method": "getRooms",
-                "locId": self._loc_id}
-        }
-        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
-        # check if request was acceppted and if request was successful
-        if response.status_code != 200 or \
-                response.json()['status']['result'] != 'success':
-            _LOGGER.error("updating room failed, %s", response)
-            return False
-        # extract and store roomId for later use
-        rooms = response.json()['response']['rooms']
-        room_updated = False
-        for room in rooms:
-            if room['roomName'] == self._room_name:
-                self._room = room
-                _LOGGER.info("Successfully updated data for room '%s' "
-                             "with ID %s", self._room['roomName'],
-                             self._room['roomId'])
-                room_updated = True
-                break
-        if not room_updated:
-            return False
-        # update temperatures values
-        self._target_temperature = int(self._room['targetTemp'])/10
-        self._target_temperature_low = int(self._room['minTemp'])/10
-        self._target_temperature_high = int(self._room['maxTemp'])/10
-        self._current_temperature = int(self._room['currentTemp'])/10
-        return True
-    '''
     def get_target_temmperature(self):
         """return target temperature"""
         return self._target_temperature
@@ -208,7 +212,7 @@ class Warmup4IEDevice():
         self._warmup_access_token = response.json()['response']['token']
         return True
 
-    def _get_locations(self):
+    def _get_location_from_name(self):
         """retrieve location ID that corrresponds to self._location_name"""
         # make sure we have an accessToken
         if self._warmup_access_token is None:

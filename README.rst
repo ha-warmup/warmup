@@ -105,3 +105,8 @@ Release Notes
 -----
 
 - added functionality to allow configuration of Warmup4IE thermostat via HA UI Config entry.
+
+0.1.5
+-----
+
+- added getter methods for location, location id, room name, room id and serial number

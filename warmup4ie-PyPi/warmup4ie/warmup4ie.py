@@ -193,6 +193,24 @@ class Warmup4IEDevice():
         """return maximum temperature"""
         return self._target_temperature_high
 
+    def get_location_name(self):
+        return self._location_name
+
+    def get_location_id(self):
+        return self._loc_id
+
+    def get_room_name(self):
+        return self._room_name
+
+    def get_room_id(self):
+        return self._room['id']
+
+    def get_SN(self):
+        for device in self._all_devices:
+            if device.loc_id == self._loc_id and device.room_id == self._room['id']:
+                return device.thermostat_SN
+        return None
+
     def _generate_access_token(self):
         """retrieve access token from server"""
         body = {'request':

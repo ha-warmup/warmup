@@ -51,11 +51,21 @@ class Warmup4IEDevice():
               'app-token': APP_TOKEN,
               'app-version': '1.8.1',
               'accept-language': 'de-de'}
-    RUN_MODE = {0:'off',
-                1:'prog',
-                3:'fixed',
-                4:'frost',
-                5:'away'}
+    RUN_MODE = {0: 'off',
+                1: 'prog',
+                2: 'overide',
+                3: 'fixed',
+                4: 'frost',
+                5: 'away',
+                6: 'flip',
+                7: 'grad',
+                8: 'relay'}
+    ROOM_MODE = {1: 'prog',
+                 3: 'fixed'}
+    HEATING_TARGET = {
+        0: 'floor',
+        1: 'air'
+    }
 
     #pylint: disable-msg=too-many-arguments
     def __init__(self, user, password, location = None, room = None, target_temp = 0):
@@ -72,6 +82,20 @@ class Warmup4IEDevice():
         self._loc_id = None
         self._room = None
         self._current_temperature = 0
+        self._target_temperature_low = 0
+        self._target_temperature_high = 0
+        self._floor_temperature = 0
+        self._floor_temperature_2 = 0
+        self._air_temperature = 0
+        self._away_temperature = 0
+        self._comfort_temperature = 0
+        self._cost = "0"
+        self._energy = "0"
+        self._fixed_temperature = 0
+        self._override_temperature = 0
+        self._override_duration = 0
+        self.sleep_temperature = 0
+        self._override_duration_mins = 0
         self._away = False
         self._on = True
 
@@ -79,7 +103,7 @@ class Warmup4IEDevice():
         token_ok = self._generate_access_token()
 
         self._all_devices = self.get_all_devices()
-        
+
         if self._all_devices is not None and self._location_name is None:
             self._location_name = self._all_devices[0].loc_name
         if self._all_devices is not None and self._room_name is None:
@@ -103,7 +127,7 @@ class Warmup4IEDevice():
         """
         if not update and self._all_devices is not None:
             return self._all_devices
-        
+
         # make sure we have an accessToken
         if self._warmup_access_token is None:
             return None
@@ -147,12 +171,12 @@ class Warmup4IEDevice():
             return False
 
         body = {
-                "query": "query QUERY{ user{ currentLocation: location { id name rooms{ id roomName runModeInt targetTemp currentTemp thermostat4ies {minTemp maxTemp}}  }}  } "
+                "query": "query QUERY{ user{ currentLocation: location { id name rooms{ id roomName runModeInt targetTemp currentTemp awayTemp comfortTemp cost energy fixedTemp overrideTemp overrideDur roomModeInt sleepTemp targetTemp thermostat4ies {minTemp maxTemp airTemp floor1Temp floor2Temp heatingTargetInt}}  }}  } "
         }
         header_with_token = self.HEADER.copy()
         header_with_token['warmup-authorization'] = str(self._warmup_access_token)
         response = requests.post(url=self.URL, headers=header_with_token, json=body)
-        # check if request was acceppted and if request was successful
+        # check if request was accepted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status'] != 'success':
             _LOGGER.error("updating new room failed, %s", response)
@@ -175,15 +199,70 @@ class Warmup4IEDevice():
         self._target_temperature_low = int(self._room['thermostat4ies'][0]['minTemp'])/10
         self._target_temperature_high = int(self._room['thermostat4ies'][0]['maxTemp'])/10
         self._current_temperature = int(self._room['currentTemp'])/10
+        self._floor_temperature = int(self._room['thermostat4ies'][0]['floor1Temp'])/10
+        self._floor_temperature_2 = int(self._room['thermostat4ies'][0]['floor2Temp'])/10
+        self._air_temperature = int(self._room['thermostat4ies'][0]['airTemp'])/10
+        self._away_temperature = int(self._room['awayTemp'])/10
+        self._comfort_temperature = int(self._room['comfortTemp'])/10
+        self._cost = self._room['cost']
+        self._energy = self._room['energy']
+        self._fixed_temperature = int(self._room['fixedTemp'])/10
+        self._override_temperature = int(self._room['overrideTemp'])/10
+        self._override_duration_mins = int(self._room['overrideDur'])
+        self.sleep_temperature = int(self._room['sleepTemp'])/10
         return True
 
-    def get_target_temmperature(self):
+    def get_target_temperature(self):
         """return target temperature"""
         return self._target_temperature
 
-    def get_current_temmperature(self):
-        """return currrent temperature"""
+    def get_current_temperature(self):
+        """return current temperature"""
         return self._current_temperature
+
+    def get_floor_temperature(self):
+        """return floor temperature"""
+        return self._floor_temperature
+
+    def get_floor_temperature_2(self):
+        """return floor second temperature"""
+        return self._floor_temperature_2
+
+    def get_air_temperature(self):
+        """return air temperature"""
+        return self._air_temperature
+
+    def get_away_temperature(self):
+        """return away temperature"""
+        return self._away_temperature
+
+    def get_comfort_temperature(self):
+        """return comfort temperature"""
+        return self._comfort_temperature
+
+    def get_fixed_temperature(self):
+        """return fixed temperature"""
+        return self._fixed_temperature
+
+    def get_override_temperature(self):
+        """return override temperature"""
+        return self._override_temperature
+
+    def get_sleep_temperature(self):
+        """return sleep temperature"""
+        return self._sleep_temperature
+
+    def get_energy(self):
+        """return energy usage"""
+        return self._energy
+
+    def get_cost(self):
+        """return energy cost"""
+        return self._energy
+
+    def get_override_duration_mins(self):
+        """return the number of minutes the current override is set for"""
+        return self._override_duration_mins
 
     def get_target_temperature_low(self):
         """return minimum temperature"""
@@ -221,7 +300,7 @@ class Warmup4IEDevice():
                 }
 
         response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
-        # check if request was acceppted and if request was successful
+        # check if request was accepted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':
             _LOGGER.error("generating AccessToken failed, %s", response)

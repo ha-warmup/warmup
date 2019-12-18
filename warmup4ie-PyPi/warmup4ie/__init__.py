@@ -1,1 +1,1 @@
-from .warmup4ie import Warmup4IEDevice
+from .warmup4ie import Warmup4IE, Warmup4IEDevice

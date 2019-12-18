@@ -57,10 +57,10 @@ You may install the library via pip using
 After that, import the library, and away we go.
 
     >>> import warmup4ie
-    >>> device = warmup4ie.Warmup4IEDevice('<e-mail>', '<password>', 
-    '<location>', '<room>', <inital target temp>)
-    >>> device.get_current_temmperature()
-    {'raw': 21.0}
+    >>> warmup = warmup4ie.Warmup4IE('<e-mail>', '<password>',
+    >>> warmup.get_all_devices()
+    >>> device = warmup.get_device_by_name("Underfloor")
+    >>> device.get_current_temperature()
 
 Device Versions
 ---------------
@@ -75,7 +75,9 @@ has occured with.
 Supported Features
 ------------------
 
-At the moment the library supports reading current temperature and setting the target temperature, switching between manual, automatic and frost protection mode, and switching the device off.
+At the moment the library supports reading current temperature, target temperature plus other values from the thermostat
+and setting the target temperature, switching between manual, automatic and frost protection mode, switching the device off.
+and setting a temporary override.
 
 Release Notes
 =============
@@ -110,3 +112,24 @@ Release Notes
 -----
 
 - added getter methods for location, location id, room name, room id and serial number
+
+0.1.6
+-----
+
+- Changed so that multiple devices are updated in a single HTTP request
+- Added Set Override method
+- Added access to the following information from the thermostat
+    - target_temperature_low
+    - target_temperature_high
+    - floor_temperature
+    - floor_temperature_2
+    - air_temperature
+    - away_temperature
+    - comfort_temperature
+    - cost
+    - energy
+    - fixed_temperature
+    - override_temperature
+    - override_duration
+    - sleep_temperature
+    - override_duration_mins

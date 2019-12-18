@@ -1,0 +1,15 @@
+  set_override:
+    description: Set or update a temperature override.
+    fields:
+      room:
+        description: Room to set.
+        example: "Kitchen"
+      temperature:
+        description: Temperature to set in 0.5 increments
+        example: "22.5"
+      until:
+        description: When the override should end. Defaults to 1 hour from now.
+        example: "14:00"
+      location:
+        description: Warmup account location Defaults to first room with matching name if not specified.
+        example: "Home"

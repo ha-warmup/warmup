@@ -4,7 +4,5 @@
   "documentation": "https://www.home-assistant.io/components/warmup",
   "dependencies": [],
   "codeowners": [],
-  "requirements": [
-    "warmup4ie==0.1.5"
-  ]
+  "requirements": []
 }

@@ -4,7 +4,7 @@ import setuptools
 long_desc = open('README.rst').read()
 setuptools.setup(
     name="warmup4ie",
-    version='0.1.3',
+    version='0.1.5',
     description='client library for 4IE thermostat sold by warmup',
     long_description=long_desc,
     license='Apache',

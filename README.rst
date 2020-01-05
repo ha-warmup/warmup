@@ -39,7 +39,7 @@ in your HA **config** folder, e.g.:
   # remove any previous version
   rm -r ./custom_components/warmup 2>/dev/null
   mkdir -p ./custom_components/warmup
-  cp -r /tmp/warmup/warmup/* ./custom_components/warmup
+  cp -r /tmp/warmup/warmup_cc/* ./custom_components/warmup
   # clean up
   rm -rf /tmp/warmup/
 

@@ -94,58 +94,5 @@ At the moment the library supports reading current temperature, target temperatu
 and setting the target temperature, switching between manual, automatic and frost protection mode, switching the device off.
 and setting a temporary override.
 
-Release Notes
-=============
-
-0.1.0
------
-
-- inital release
-
-0.1.1
------
-
-- bug fixes
-
-0.1.2
------
-
-- bug fixes
-
-0.1.3
------
-
-- changed http-request to use the new api.
-- adapted file names to comply with the new naming structure of HA introduced with 0.92
-
-0.1.4
------
-
-- added functionality to allow configuration of Warmup4IE thermostat via HA UI Config entry.
-
-0.1.5
------
-
-- added getter methods for location, location id, room name, room id and serial number
-
-0.1.6
------
-
-- Changed so that multiple devices are updated in a single HTTP request
-- Added Set Override method
-- Added access to the following information from the thermostat
-    - target_temperature_low
-    - target_temperature_high
-    - floor_temperature
-    - floor_temperature_2
-    - air_temperature
-    - away_temperature
-    - comfort_temperature
-    - cost
-    - energy
-    - fixed_temperature
-    - override_temperature
-    - override_duration
-    - sleep_temperature
-    - override_duration_mins
+For further information on versions please see the `CHANGELOG <https://github.com/ha-warmup/warmup/blob/master/CHANGELOG.md>`_
 

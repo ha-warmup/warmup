@@ -17,7 +17,7 @@ either to deal with issues raised or to develop new features.
 As you will use a fork for your development we encourage you to 
 familiarise yourself with the [Github guide to working with forks](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/working-with-forks).
     
-All development work should be done from the **dev** branch. 
+All development work should be done on branches created from the **dev** branch. 
 Please ensure you understand [the branching model we follow](https://nvie.com/posts/a-successful-git-branching-model/).
 
 Both of the above-linked guides also include command examples for you 
@@ -26,4 +26,4 @@ to work on your local project repository.
 Please raise an issue if you want further guidance on developing new features or fixing issues.
 
 Once you have completed your development and testing on your changes, 
-then please raise a Pull Request for us to be able to merge in your work.
+then please raise a Pull Request for us to be able to merge in your work. They should be merged into the **dev** branch.

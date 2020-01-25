@@ -1,9 +1,21 @@
 Introduction
 ============
 
-This is a library for communicating with a wifi-enabled home thermostat made by
-`Warmup <https://www.warmup.co.uk/>`_. At the time of writing, this only 
-includes the `warmup 4IE <https://www.warmup.co.uk/thermostats/smart/4ie-underfloor-heating>`_.
+This software is a Custom Component to integrate Warmup devices into `Home Assistant <https://www.home-assistant.io/>`_.
+
+`Warmup <https://www.warmup.co.uk/>`_ manufacture underfloor heating 
+and control systems and their wifi-enabled home thermostat, `warmup 4IE <https://www.warmup.co.uk/thermostats/smart/4ie-underfloor-heating>`_, 
+has an API. This software enables communication via this API, 
+and allows Home Assistant to read and control the device (currently just this one model). 
+
+For instructions on how to **install** this component please keep reading below.
+
+There is more detailed documentation on the API and the information returned from the device on the `documentation wiki <https://github.com/ha-warmup/warmup/wiki>`_. 
+If you have issues using this software then please check our `Issue list <https://github.com/ha-warmup/warmup/issues>`_ and if someone else has not already, then do raise a new issue. 
+If you wish you become more involved with the project then please see our `guide to contributing <https://github.com/ha-warmup/warmup/blob/master/CONTRIBUTING.md>`_. 
+
+History
+-------
 
 This code is inspired by a project for SmartThingsHub, see `here <https://github.com/alyc100/SmartThingsPublic/blob/master/devicetypes/alyc100/warmup-4ie.src/warmup-4ie.groovy>`_. Many Thanks to alyc100 for the great work!
 
@@ -12,7 +24,7 @@ software and has not sanctioned or endorsed it in any way.
 4IE is a registered trademark of Warmup Plc.
 
 License
-=======
+-------
 
 This software is available under Apache license. Please see LICENSE.txt.
 
@@ -63,6 +75,8 @@ configuration.yaml:
 
 After restarting home assistant, the component will be loaded automatically.
 
+Our wiki has some `ideas on how to configure warmup devices <https://github.com/ha-warmup/warmup/wiki/Configuration-ideas>`_ in your Home Assistant instance.
+
 Standalone
 ----------
 You may install the library via pip using
@@ -77,6 +91,10 @@ After that, import the library, and away we go.
     >>> device = warmup.get_device_by_name("Underfloor")
     >>> device.get_current_temperature()
 
+
+Status
+======
+
 Device Versions
 ---------------
 
@@ -84,8 +102,7 @@ Supported models:
 
 - 4IE
 
-Since I only have access to the 4IE, that is the model that the development 
-has occured with. 
+This is currently the only model that developers and testers have available to work on.
 
 Supported Features
 ------------------
@@ -94,58 +111,5 @@ At the moment the library supports reading current temperature, target temperatu
 and setting the target temperature, switching between manual, automatic and frost protection mode, switching the device off.
 and setting a temporary override.
 
-Release Notes
-=============
-
-0.1.0
------
-
-- inital release
-
-0.1.1
------
-
-- bug fixes
-
-0.1.2
------
-
-- bug fixes
-
-0.1.3
------
-
-- changed http-request to use the new api.
-- adapted file names to comply with the new naming structure of HA introduced with 0.92
-
-0.1.4
------
-
-- added functionality to allow configuration of Warmup4IE thermostat via HA UI Config entry.
-
-0.1.5
------
-
-- added getter methods for location, location id, room name, room id and serial number
-
-0.1.6
------
-
-- Changed so that multiple devices are updated in a single HTTP request
-- Added Set Override method
-- Added access to the following information from the thermostat
-    - target_temperature_low
-    - target_temperature_high
-    - floor_temperature
-    - floor_temperature_2
-    - air_temperature
-    - away_temperature
-    - comfort_temperature
-    - cost
-    - energy
-    - fixed_temperature
-    - override_temperature
-    - override_duration
-    - sleep_temperature
-    - override_duration_mins
+For further information on versions please see the `CHANGELOG <https://github.com/ha-warmup/warmup/blob/master/CHANGELOG.md>`_
 

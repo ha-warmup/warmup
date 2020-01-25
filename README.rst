@@ -1,9 +1,23 @@
 Introduction
 ============
 
-This is a library for communicating with a wifi-enabled home thermostat made by
-`Warmup <https://www.warmup.co.uk/>`_. At the time of writing, this only 
-includes the `warmup 4IE <https://www.warmup.co.uk/thermostats/smart/4ie-underfloor-heating>`_.
+This software is a Custom Component to integrate Warmup devices into `Home Assistant <https://www.home-assistant.io/>`_.
+
+`Warmup <https://www.warmup.co.uk/>`_ manufacture underfloor heating 
+and control systems and their wifi-enabled home thermostat, `warmup 4IE <https://www.warmup.co.uk/thermostats/smart/4ie-underfloor-heating>`_, 
+has an API. This software enables communication via this API, 
+and allows Home Assistant to read and control the device (currently just this one model). 
+
+Please keep reading below for instructions on how to install and use this component. 
+
+There is more detailed documentation on the API and the information returned from the device on the `documentation wiki <https://github.com/ha-warmup/warmup/wiki>`_.
+
+If you have issues using this software then please check our `Issue list <https://github.com/ha-warmup/warmup/issues>`_ and if someone else has not already, then do raise a new issue.
+
+If you wish you become more involved with the project then please see our `guide to contributing <https://github.com/ha-warmup/warmup/blob/master/CONTRIBUTING.md>`_.
+
+History
+-------
 
 This code is inspired by a project for SmartThingsHub, see `here <https://github.com/alyc100/SmartThingsPublic/blob/master/devicetypes/alyc100/warmup-4ie.src/warmup-4ie.groovy>`_. Many Thanks to alyc100 for the great work!
 
@@ -12,7 +26,7 @@ software and has not sanctioned or endorsed it in any way.
 4IE is a registered trademark of Warmup Plc.
 
 License
-=======
+-------
 
 This software is available under Apache license. Please see LICENSE.txt.
 
@@ -77,6 +91,10 @@ After that, import the library, and away we go.
     >>> device = warmup.get_device_by_name("Underfloor")
     >>> device.get_current_temperature()
 
+
+Status
+======
+
 Device Versions
 ---------------
 
@@ -84,8 +102,7 @@ Supported models:
 
 - 4IE
 
-Since I only have access to the 4IE, that is the model that the development 
-has occured with. 
+This is currently the only model that developers and testers have available to work on.
 
 Supported Features
 ------------------

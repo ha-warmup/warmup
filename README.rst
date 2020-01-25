@@ -8,13 +8,11 @@ and control systems and their wifi-enabled home thermostat, `warmup 4IE <https:/
 has an API. This software enables communication via this API, 
 and allows Home Assistant to read and control the device (currently just this one model). 
 
-Please keep reading below for instructions on how to install and use this component. 
+For instructions on how to **install** this component please keep reading below.
 
-There is more detailed documentation on the API and the information returned from the device on the `documentation wiki <https://github.com/ha-warmup/warmup/wiki>`_.
-
-If you have issues using this software then please check our `Issue list <https://github.com/ha-warmup/warmup/issues>`_ and if someone else has not already, then do raise a new issue.
-
-If you wish you become more involved with the project then please see our `guide to contributing <https://github.com/ha-warmup/warmup/blob/master/CONTRIBUTING.md>`_.
+There is more detailed documentation on the API and the information returned from the device on the `documentation wiki <https://github.com/ha-warmup/warmup/wiki>`_. 
+If you have issues using this software then please check our `Issue list <https://github.com/ha-warmup/warmup/issues>`_ and if someone else has not already, then do raise a new issue. 
+If you wish you become more involved with the project then please see our `guide to contributing <https://github.com/ha-warmup/warmup/blob/master/CONTRIBUTING.md>`_. 
 
 History
 -------

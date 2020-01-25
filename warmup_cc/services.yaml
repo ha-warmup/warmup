@@ -1,0 +1,12 @@
+set_override:
+  description: Set or update a temperature override.
+  fields:
+    entity_id:
+      description: Name of Warmup entity.
+      example: "Kitchen"
+    temperature:
+      description: Temperature to set in 0.5 increments
+      example: "22.5"
+    until:
+      description: When the override should end, enclose in quotes otherwise the colon causes problems. Defaults to 1 hour from now.
+      example: "14:00"

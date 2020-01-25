@@ -9,6 +9,7 @@ This code is inspired by a project for SmartThingsHub, see `here <https://github
 
 Warmup Plc was not involved in the creation of this
 software and has not sanctioned or endorsed it in any way.
+4IE is a registered trademark of Warmup Plc.
 
 License
 =======
@@ -22,10 +23,30 @@ The library is primary intended to interface the 4IE with home assistant, but ma
 
 Home Assistant
 ---------------
+
 To setup this component, you need to register to warmup first.
 see https://my.warmup.com/login
 
-Then copy the folder `warmup_cc <https://github.com/alex-0103/warmup4IE/blob/master/warmup_cc>`_ to your "*custom_components*" folder in your "*config*" dir.
+Then copy the contents of the `warmup` subfolder into custom_components 
+in your HA **config** folder, e.g.:
+
+.. code-block:: sh
+
+  cd path/to/your/config
+
+  git clone https://github.com/ha-warmup/warmup.git /tmp/warmup
+
+  # remove any previous version
+  rm -r ./custom_components/warmup 2>/dev/null
+  mkdir -p ./custom_components/warmup
+  cp -r /tmp/warmup/warmup_cc/* ./custom_components/warmup
+  # clean up
+  rm -rf /tmp/warmup/
+
+
+NB: Previous versions of these instructions stated to use `warmup_cc`
+however this is now simply `warmup`
+
 
 Then add to your
 configuration.yaml:
@@ -33,18 +54,12 @@ configuration.yaml:
 .. code-block:: yaml
 
   climate:
-    - platform: warmup_cc
-      name: YOUR_DESCRIPTION
+    - platform: warmup
       username: YOUR_E_MAIL_ADDRESS
       password: YOUR_PASSWORD
-      location: YOUR_LOCATION_NAME
-      room: YOUR_ROOM_NAME
 
-* **name** (optional): the description of the device, as seen by the user in the front end
 * **username** (required): the username used to login to the warmup web site
 * **password** (required): the password used to login to the warmup web site; may be moved to the secrets.yaml file. See `secrets <https://www.home-assistant.io/docs/configuration/secrets/>`_
-* **location** (required): the location name used in the warmup web site
-* **room** (required): the room name of the device used in the warmup web site
 
 After restarting home assistant, the component will be loaded automatically.
 
@@ -57,10 +72,10 @@ You may install the library via pip using
 After that, import the library, and away we go.
 
     >>> import warmup4ie
-    >>> device = warmup4ie.Warmup4IEDevice('<e-mail>', '<password>', 
-    '<location>', '<room>', <inital target temp>)
-    >>> device.get_current_temmperature()
-    {'raw': 21.0}
+    >>> warmup = warmup4ie.Warmup4IE('<e-mail>', '<password>',
+    >>> warmup.get_all_devices()
+    >>> device = warmup.get_device_by_name("Underfloor")
+    >>> device.get_current_temperature()
 
 Device Versions
 ---------------
@@ -75,7 +90,9 @@ has occured with.
 Supported Features
 ------------------
 
-At the moment the library supports reading current temperature and setting the target temperature, switching between manual, automatic and frost protection mode, and switching the device off.
+At the moment the library supports reading current temperature, target temperature plus other values from the thermostat
+and setting the target temperature, switching between manual, automatic and frost protection mode, switching the device off.
+and setting a temporary override.
 
 Release Notes
 =============
@@ -110,3 +127,25 @@ Release Notes
 -----
 
 - added getter methods for location, location id, room name, room id and serial number
+
+0.1.6
+-----
+
+- Changed so that multiple devices are updated in a single HTTP request
+- Added Set Override method
+- Added access to the following information from the thermostat
+    - target_temperature_low
+    - target_temperature_high
+    - floor_temperature
+    - floor_temperature_2
+    - air_temperature
+    - away_temperature
+    - comfort_temperature
+    - cost
+    - energy
+    - fixed_temperature
+    - override_temperature
+    - override_duration
+    - sleep_temperature
+    - override_duration_mins
+

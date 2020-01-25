@@ -75,6 +75,8 @@ configuration.yaml:
 
 After restarting home assistant, the component will be loaded automatically.
 
+Our wiki has some `ideas on how to configure warmup devices <https://github.com/ha-warmup/warmup/wiki/Configuration-ideas>`_ in your Home Assistant instance.
+
 Standalone
 ----------
 You may install the library via pip using

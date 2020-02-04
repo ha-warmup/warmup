@@ -17,7 +17,7 @@ If you wish you become more involved with the project then please see our `guide
 History
 -------
 
-This code is inspired by a project for SmartThingsHub, see `here <https://github.com/alyc100/SmartThingsPublic/blob/master/devicetypes/alyc100/warmup-4ie.src/warmup-4ie.groovy>`_. Many Thanks to alyc100 for the great work!
+This code is derived from some great work by `@alex0103 <https://github.com/alex-0103>`_ to create a `Home Assistant Custom Component and Python Package <https://github.com/alex-0103/warmup4IE>`_. This has been improved by a number of coders, notably `@foxy82 <https://github.com/foxy82/warmup4IE>`_ and the code was origianlly inspired by `@alyc100 <https://github.com/alyc100>`_'s project for SmartThingsHub `here <https://github.com/alyc100/SmartThingsPublic/blob/master/devicetypes/alyc100/warmup-4ie.src/warmup-4ie.groovy>`_. Many Thanks to all the contributors who helped us get here.! 
 
 Warmup Plc was not involved in the creation of this
 software and has not sanctioned or endorsed it in any way.

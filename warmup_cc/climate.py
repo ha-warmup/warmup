@@ -6,7 +6,7 @@ from typing import Any, Dict
 import voluptuous as vol
 from .warmup4ie import Warmup4IE, Warmup4IEDevice
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -132,7 +132,7 @@ class WarmupClient:
         self._warmup.update_all_devices()
 
 
-class WarmupThermostat(ClimateDevice):
+class WarmupThermostat(ClimateEntity):
     """Representation of a Warmup device."""
 
     def __init__(self, hass, device: Warmup4IEDevice, client: WarmupClient):

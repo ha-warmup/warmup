@@ -34,6 +34,27 @@ Recent features from development that have not been formally released yet:
 * 
 
 
+## 2021.5.23
+
+Mainly intended to keep the component working once HA 2021.6 is released - thanks to @rct for his contributions
+
+### Added
+
+* Manifest now refers to our issue tracker
+* Added version into manifest
+
+### Changed
+
+* Switched to versioning format YYYY.M.D (no leading zeroes)
+* removed _cc from folder name
+* updated instructions in readme
+
+### Fixed
+
+* "Version Error" in HA log on start up #25
+
+
+
 ## 0.1.6 - 2020-01-05
 
 ### Changed

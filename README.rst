@@ -51,13 +51,13 @@ in your HA **config** folder, e.g.:
   # remove any previous version
   rm -r ./custom_components/warmup 2>/dev/null
   mkdir -p ./custom_components/warmup
-  cp -r /tmp/warmup/warmup_cc/* ./custom_components/warmup
+  cp -r /tmp/warmup/warmup/* ./custom_components/warmup
   # clean up
   rm -rf /tmp/warmup/
 
 
-NB: Previous versions of these instructions stated to use `warmup_cc`
-however this is now simply `warmup`
+NB: the component folder has been renamed from `warmup_cc` 
+to simply `warmup`, in line with recommendations from the HA project.
 
 
 Then add to your

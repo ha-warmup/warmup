@@ -19,6 +19,7 @@ Recent features from development that have not been formally released yet:
 
 ### Changed
 
+* Converted README and LICENSE to Markdown
 * 
 
 ### Fixed

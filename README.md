@@ -50,10 +50,16 @@ assistant, but may also be used standalone.
 
 ## Home Assistant
 
+This is a **Custom Component** for manual inclusion in a **Home Assistant Core** installation (manual using Python virtual environment). Note that it is **not** a _Custom repository_ for Home Assistant Operating System (HAOS) or Home Assistant Container deployments.
+
+### Register with My Warmup
+
 To setup this component, you need to register to warmup first. see
 <https://my.warmup.com/login>
 
-Then copy the contents of the [warmup]{.title-ref} subfolder into
+### Deploy custom component
+
+Then copy the contents of the `warmup` subfolder into
 custom_components in your HA **config** folder, e.g.:
 
 ```sh
@@ -69,9 +75,24 @@ cp -r /tmp/warmup/warmup/* ./custom_components/warmup
 rm -rf /tmp/warmup/
 ```
 
-NB: the component folder has been renamed from [warmup_cc]{.title-ref}
-to simply [warmup]{.title-ref}, in line with recommendations from the HA
+NB: the component folder has been renamed from `warmup_cc` to simply `warmup`, in line with recommendations from the HA
 project.
+
+
+#### Warnings in logs
+
+Note that once you have successfully 
+deployed the custom component and restarted you Home Assistant, 
+you should see the following warning in the logs:
+
+    WARNING [homeassistant.loader] 
+    We found a custom integration warmup which has not been tested by Home Assistant. 
+    This component might cause stability problems, be sure to disable it if you experience issues with Home Assistant
+
+This is a positive sign, as it means 
+the custom component has been successfully loaded. Great! - now carry on.
+
+### Add the warmup platform manually via YAML
 
 Then add to your configuration.yaml:
 
@@ -91,9 +112,13 @@ climate:
 After restarting home assistant, the component will be loaded
 automatically.
 
+### Add your devices to the dashboard
+
 Our wiki has some [ideas on how to configure warmup
 devices](https://github.com/ha-warmup/warmup/wiki/Configuration-ideas)
 in your Home Assistant instance.
+
+
 
 ## Standalone
 

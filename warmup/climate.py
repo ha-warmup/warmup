@@ -149,6 +149,7 @@ class WarmupThermostat(ClimateEntity):
         self._min_temp = device.min_temp
         self._max_temp = device.max_temp
         self._name = device.get_room_name()
+        self._attr_unique_id = "warmup_" + device.get_serial_number()
 
         self._current_operation_mode = device.run_mode
         self._away = False

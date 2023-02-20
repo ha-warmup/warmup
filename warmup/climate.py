@@ -31,7 +31,9 @@ from homeassistant.const import (
 from homeassistant.exceptions import InvalidStateError, PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.util.temperature import convert as convert_temperature
+
+""" temperature utility will stop working in HA 2023.4. Removed it for now, as CELCIUS is the only temperature standard this module supports anyway. """
+# from homeassistant.util.temperature import convert as convert_temperature
 
 DOMAIN = "warmup"
 CONFIG_SCHEMA = vol.Schema(
@@ -313,16 +315,18 @@ class WarmupThermostat(ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(
-            self._device.min_temp, TEMP_CELSIUS, self.hass.config.units.temperature_unit
-        )
+        # return convert_temperature(
+        #    self._device.min_temp, TEMP_CELSIUS, self.hass.config.units.temperature_unit
+        # )
+        return self._device.min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(
-            self._device.max_temp, TEMP_CELSIUS, self.hass.config.units.temperature_unit
-        )
+        # return convert_temperature(
+        #     self._device.max_temp, TEMP_CELSIUS, self.hass.config.units.temperature_unit
+        # )
+        return self._device.max_temp
 
     @property
     def supported_features(self):

@@ -6,7 +6,7 @@ from typing import Any, Dict
 import voluptuous as vol
 from .warmup4ie import Warmup4IE, Warmup4IEDevice
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -31,7 +31,9 @@ from homeassistant.const import (
 from homeassistant.exceptions import InvalidStateError, PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.util.temperature import convert as convert_temperature
+
+""" temperature utility will stop working in HA 2023.4. Removed it for now, as CELCIUS is the only temperature standard this module supports anyway. """
+# from homeassistant.util.temperature import convert as convert_temperature
 
 DOMAIN = "warmup"
 CONFIG_SCHEMA = vol.Schema(
@@ -132,7 +134,7 @@ class WarmupClient:
         self._warmup.update_all_devices()
 
 
-class WarmupThermostat(ClimateDevice):
+class WarmupThermostat(ClimateEntity):
     """Representation of a Warmup device."""
 
     def __init__(self, hass, device: Warmup4IEDevice, client: WarmupClient):
@@ -149,6 +151,7 @@ class WarmupThermostat(ClimateDevice):
         self._min_temp = device.min_temp
         self._max_temp = device.max_temp
         self._name = device.get_room_name()
+        self._attr_unique_id = "warmup_" + device.get_serial_number()
 
         self._current_operation_mode = device.run_mode
         self._away = False
@@ -312,16 +315,18 @@ class WarmupThermostat(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(
-            self._device.min_temp, TEMP_CELSIUS, self.hass.config.units.temperature_unit
-        )
+        # return convert_temperature(
+        #    self._device.min_temp, TEMP_CELSIUS, self.hass.config.units.temperature_unit
+        # )
+        return self._device.min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(
-            self._device.max_temp, TEMP_CELSIUS, self.hass.config.units.temperature_unit
-        )
+        # return convert_temperature(
+        #     self._device.max_temp, TEMP_CELSIUS, self.hass.config.units.temperature_unit
+        # )
+        return self._device.max_temp
 
     @property
     def supported_features(self):

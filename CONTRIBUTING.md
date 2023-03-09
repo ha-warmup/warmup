@@ -27,3 +27,10 @@ Please raise an issue if you want further guidance on developing new features or
 
 Once you have completed your development and testing on your changes, 
 then please raise a Pull Request for us to be able to merge in your work. They should be merged into the **dev** branch.
+
+## Release
+
+When releasing a version, please ensure that you update the version in 
+
+custom_components/warmup/manifest.json
+

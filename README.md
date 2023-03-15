@@ -135,7 +135,7 @@ You may install the library via pip using
 >>> pip install warmup4ie
 ```
 
-After that, import the library, and away we go.
+After that, import the library, and away you go.
 
 ```python
 >>> import warmup4ie
@@ -153,9 +153,11 @@ After that, import the library, and away we go.
     - this is the device for which this project was launched, so has reasonable support
 * 6IE
     - this newer device has shown teething issues here, but seems to work with some caveats
-    - your wifi network SSID length must be <= 32 characters and password <= 15 characters
+    - try keeping your wifi network SSID length <= 32 characters and password <= 15 characters
     - you cannot set it up as 'living room', but you can choose 'kitchen' and change through the warmup web interface 
     - please see [6ie Thermostat compatibility issues #33](https://github.com/ha-warmup/warmup/issues/33) for details
+
+Note that some models may not have `comma` on the keyboard, which may also limit your choice of wireless network SSID and Password.
 
 ## Supported Features
 

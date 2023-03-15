@@ -50,19 +50,18 @@ and select _Category_: **Integration**.
 
 For help see <https://hacs.xyz/docs/faq/custom_repositories/>
 
+
 ## Manual installation
 
-You may also use this software as a 
+Here are instructions for you to install this software as a 
 **Custom Component** that is manually included 
 in a **Home Assistant Core** installation 
 (manual using Python virtual environment). 
-Note that it is **not** a _Custom repository_ for Home Assistant Operating System (HAOS) or Home Assistant Container deployments.
 
+### Install custom component
 
-### Deploy custom component
-
-Then copy the contents of the `warmup` subfolder into
-custom_components in your HA **config** folder, e.g.:
+You need to copy the contents of the `custom_components/warmup` subfolder 
+into in your HA **config** folder, e.g.:
 
 ```sh
 cd path/to/your/config
@@ -72,19 +71,21 @@ git clone https://github.com/ha-warmup/warmup.git /tmp/warmup
 # remove any previous version
 rm -r ./custom_components/warmup 2>/dev/null
 mkdir -p ./custom_components/warmup
-cp -r /tmp/warmup/warmup/* ./custom_components/warmup
+cp -r /tmp/warmup/custom_components/warmup/* ./custom_components/warmup
 # clean up
 rm -rf /tmp/warmup/
 ```
 
-NB: the component folder has been renamed from `warmup_cc` to simply `warmup`, in line with recommendations from the HA
-project.
+#### alternative versions
+
+If you are testing a specific branch, like `dev`, then you would `git clone -b dev https...etc` to get the branch you need. 
 
 In the unlikely event that you cannot manually install 
 the HACS compatible version of this custom component, 
 you may go back to the last release before HACS compatibility, 
-[Release v23.02](https://github.com/ha-warmup/warmup/releases/tag/v23.02).
-
+[Release v23.02](https://github.com/ha-warmup/warmup/releases/tag/v23.02). 
+Please refer to the README inside that source file for the 
+legacy commands to deploy the custom component manually.
 
 #### Warnings in logs
 
@@ -99,7 +100,7 @@ you should see the following warning in the logs:
 This is a positive sign, as it means 
 the custom component has been successfully loaded. Great! - now carry on.
 
-### Add the warmup platform manually via YAML
+#### Add the warmup platform manually via YAML
 
 Then add to your configuration.yaml:
 
@@ -119,15 +120,7 @@ climate:
 After restarting home assistant, the component will be loaded
 automatically.
 
-### Add your devices to the dashboard
-
-Our wiki has some [ideas on how to configure warmup
-devices](https://github.com/ha-warmup/warmup/wiki/Configuration-ideas)
-in your Home Assistant instance.
-
-
-
-## Standalone
+### Standalone
 
 You may install the library via pip using
 
@@ -144,6 +137,26 @@ After that, import the library, and away you go.
 >>> device = warmup.get_device_by_name(\"Underfloor\") 
 >>> device.get_current_temperature()
 ```
+
+### Other installation types
+
+We do **not currently** have instructions for using this software as 
+a _Custom repository_ for **Home Assistant Operating System** (HAOS) 
+or **Home Assistant Container** deployments, 
+but you are welcome to use our issue tracker 
+to discuss any potential improvements to this project. 
+
+
+## Configuration
+
+### Add your devices to the dashboard
+
+Our wiki has some [ideas on how to configure warmup
+devices](https://github.com/ha-warmup/warmup/wiki/Configuration-ideas)
+in your Home Assistant instance.
+
+
+
 
 # Status
 
@@ -180,7 +193,14 @@ has not already, then do raise a new issue. If you wish you become more
 involved with the project then please see our [guide to
 contributing](https://github.com/ha-warmup/warmup/blob/master/CONTRIBUTING.md).
 
-## History
+### `ha-warmup` is an independent project
+
+Please note that Warmup Plc were not involved 
+in the creation of this software. 
+We do, however, acknowledge their ownership of 
+registered trademarks relating to their brand and products. 
+
+### History
 
 Many Thanks to all the contributors helped us get here!
 
@@ -201,11 +221,6 @@ with valuable contributions and support from
 [\@kkoenen](https://github.com/kkoenen/warmup).
  
 Thank you to the community who continue to 
-be involved with and support this project. 
-
-Please note that Warmup Plc were not involved 
-in the creation of this software. 
-We do, however, acknowledge their ownership of 
-registered trademarks relating to their brand and products. 
-
+be involved with and support this project, 
+and encourage others to use it. 
 

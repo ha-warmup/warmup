@@ -7,7 +7,8 @@ so that you can decide whether to upgrade,
 which version might suit you the best, 
 and what issues you might face.
 
-The most recent versions come first, and the Release Dates are YYYY-MM-DD
+The most recent versions come first, and the Release Versions 
+are based on date using format YYYY.M.D (no leading zeroes)
 
 ## Unreleased
 
@@ -19,8 +20,6 @@ Recent features from development that have not been formally released yet:
 
 ### Changed
 
-* Converted README and LICENSE to Markdown
-* Clarified install instructions following user feedback #30 #31
 * 
 
 ### Fixed
@@ -34,6 +33,43 @@ Recent features from development that have not been formally released yet:
 ### Removed
 
 * 
+
+
+## 2023.03.15-beta
+
+This is a MAJOR release. Previously this project was focussed on 
+a manually installed cusom_component. This release re-organised it 
+to be primarily a HACS integration that still works if installed manually.
+
+See README for details of new usage, and how to obtain old release if you have issues
+
+### Added
+
+* f345c03 Include HACS metadata files, and recent additions to components manifest
+* 57bfef6 Add unique id to the WarmupThermostat entity.
+* d9e4755 Added support notes for 6ie model
+* b91983a additional notes on devices supported from issue #33
+
+### Changed
+
+* 0175088 Reorgansied documentation (especially README) to adjust for new focus on HACS install, with manual as alternative
+* b60d38a Update README instructions for backwards compatibility with manual installations
+* e272be1 Restructured folders ready for HACS compatibility – moved the `warmup` folder into a new `custom_components` folder
+* 5fc20de Clarified install instructions following user feedback #30 #31
+* f4a2ca9 Converted README and LICENSE to Markdown
+
+### Fixed
+
+* b8d34e7 bring `dev` branch up to date so it can start receiving PRs for testing
+* 6dedb42 removed `temperature utility` ready to use new `TemperatureConverter` where needed - fix for #42
+
+### Deprecated
+
+* none
+
+### Removed
+
+* Old documentation referring to HACS not being supported
 
 
 ## 2021.5.23

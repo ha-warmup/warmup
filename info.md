@@ -14,7 +14,7 @@ It is compatible with the Home Assistant Community Store (HACS).
 Please note that Warmup Plc were not involved 
 in the creation of this software, 
 but we acknowledge their ownership of 
-registered trademarks relating to their brand. 
+registered trademarks relating to their brand and products. 
 
 For further information please see the full project README at 
 https://github.com/ha-warmup/warmup

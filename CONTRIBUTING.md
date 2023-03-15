@@ -30,7 +30,12 @@ then please raise a Pull Request for us to be able to merge in your work. They s
 
 ## Release
 
+Before bringing changes into the **master** branch, please ensure that you have referenced the changes into [CHANGELOG.md](CHANGELOG.md)
+
 When releasing a version, please ensure that you update the version in 
 
 custom_components/warmup/manifest.json
+
+Since 2021.5.23, the versioning format has been YYYY.M.D (no leading zeroes), and this should be applied to new Github Releases too.
+
 

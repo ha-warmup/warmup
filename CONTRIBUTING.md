@@ -27,3 +27,15 @@ Please raise an issue if you want further guidance on developing new features or
 
 Once you have completed your development and testing on your changes, 
 then please raise a Pull Request for us to be able to merge in your work. They should be merged into the **dev** branch.
+
+## Release
+
+Before bringing changes into the **master** branch, please ensure that you have referenced the changes into [CHANGELOG.md](CHANGELOG.md)
+
+When releasing a version, please ensure that you update the version in 
+
+custom_components/warmup/manifest.json
+
+Since 2021.5.23, the versioning format has been YYYY.M.D (no leading zeroes), and this should be applied to new Github Releases too.
+
+

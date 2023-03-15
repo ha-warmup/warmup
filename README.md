@@ -1,43 +1,25 @@
 # Introduction
 
-This software is a Custom Component to integrate Warmup devices into
-[Home Assistant](https://www.home-assistant.io/).
+This software is a Custom Component to integrate 
+Warmup under-floor heating devices into 
+[Home Assistant](https://www.home-assistant.io/). 
+It is compatible with the Home Assistant Community Store (HACS).
 
-[Warmup](https://www.warmup.co.uk/) manufacture underfloor heating and
-control systems and their wifi-enabled home thermostat, [warmup
-4IE](https://www.warmup.co.uk/thermostats/smart/4ie-underfloor-heating),
-has an API. This software enables communication via this API, and allows
-Home Assistant to read and control the device (currently just this one
-model).
+[Warmup Plc](https://www.warmup.co.uk/) 
+manufacture under-floor heating (UFH) and control systems, 
+including a range of wifi-enabled home thermostats. 
+Some of these thermostats, such as the 
+[4IE](https://www.warmup.co.uk/thermostats/smart/4ie-underfloor-heating) 
+and 6IE, have an API. 
+This software enables communication via this API, 
+and allows Home Assistant to read and control the supported devices, 
+using a python script to perform the integration. 
 
-For instructions on how to **install** this component please keep
-reading below.
+You may install this integration from the 
+Home Assistant Community Store (HACS), 
+or continue reading below for instructions 
+on the **manual installation** of this component.
 
-There is more detailed documentation on the API and the information
-returned from the device on the [documentation
-wiki](https://github.com/ha-warmup/warmup/wiki). If you have issues
-using this software then please check our [Issue
-list](https://github.com/ha-warmup/warmup/issues) and if someone else
-has not already, then do raise a new issue. If you wish you become more
-involved with the project then please see our [guide to
-contributing](https://github.com/ha-warmup/warmup/blob/master/CONTRIBUTING.md).
-
-## History
-
-This code is derived from some great work by
-[\@alex0103](https://github.com/alex-0103) to create a [Home Assistant
-Custom Component and Python
-Package](https://github.com/alex-0103/warmup4IE). This has been improved
-by a number of coders, notably
-[\@foxy82](https://github.com/foxy82/warmup4IE) and the code was
-origianlly inspired by [\@alyc100](https://github.com/alyc100)\'s
-project for SmartThingsHub
-[here](https://github.com/alyc100/SmartThingsPublic/blob/master/devicetypes/alyc100/warmup-4ie.src/warmup-4ie.groovy).
-Many Thanks to all the contributors who helped us get here.!
-
-Warmup Plc was not involved in the creation of this software and has not
-sanctioned or endorsed it in any way. 4IE is a registered trademark of
-Warmup Plc.
 
 ## License
 
@@ -48,14 +30,34 @@ This software is published under Apache 2.0 license. Please see LICENSE.md.
 The library is primary intended to interface the 4IE with home
 assistant, but may also be used standalone.
 
-## Home Assistant
+## Register with My Warmup
 
-This is a **Custom Component** for manual inclusion in a **Home Assistant Core** installation (manual using Python virtual environment). Note that it is **not** a _Custom repository_ for Home Assistant Operating System (HAOS) or Home Assistant Container deployments.
+Before you can use this component, 
+you need to register for a Warmup account. 
+See <https://my.warmup.com/login>
 
-### Register with My Warmup
 
-To setup this component, you need to register to warmup first. see
-<https://my.warmup.com/login>
+## Home Assistant Community Store
+
+In your HACS store, look in the _Integrations_ page. 
+In the top right corner select the 3-dots menu, 
+and choose _Custom repositories_. 
+Paste in the URL to this repo, 
+
+<https://github.com/ha-warmup/warmup/>
+
+and select _Category_: **Integration**. 
+
+For help see <https://hacs.xyz/docs/faq/custom_repositories/>
+
+## Manual installation
+
+You may also use this software as a 
+**Custom Component** that is manually included 
+in a **Home Assistant Core** installation 
+(manual using Python virtual environment). 
+Note that it is **not** a _Custom repository_ for Home Assistant Operating System (HAOS) or Home Assistant Container deployments.
+
 
 ### Deploy custom component
 
@@ -77,6 +79,11 @@ rm -rf /tmp/warmup/
 
 NB: the component folder has been renamed from `warmup_cc` to simply `warmup`, in line with recommendations from the HA
 project.
+
+In the unlikely event that you cannot manually install 
+the HACS compatible version of this custom component, 
+you may go back to the last release before HACS compatibility, 
+[Release v23.02](https://github.com/ha-warmup/warmup/releases/tag/v23.02).
 
 
 #### Warnings in logs
@@ -155,7 +162,48 @@ After that, import the library, and away we go.
 At the moment the library supports reading current temperature, target
 temperature plus other values from the thermostat and setting the target
 temperature, switching between manual, automatic and frost protection
-mode, switching the device off. and setting a temporary override.
+mode, switching the device off, and setting a temporary override.
 
 For further information on versions please see the
 [CHANGELOG](https://github.com/ha-warmup/warmup/blob/master/CHANGELOG.md)
+
+## Find out more
+
+There is more detailed documentation on the API and the information
+returned from the device on the [documentation
+wiki](https://github.com/ha-warmup/warmup/wiki). If you have issues
+using this software then please check our [Issue
+list](https://github.com/ha-warmup/warmup/issues) and if someone else
+has not already, then do raise a new issue. If you wish you become more
+involved with the project then please see our [guide to
+contributing](https://github.com/ha-warmup/warmup/blob/master/CONTRIBUTING.md).
+
+## History
+
+Many Thanks to all the contributors helped us get here!
+
+Originally inspired by 
+[\@alyc100](https://github.com/alyc100)\'s
+project for SmartThingsHub
+[here](https://github.com/alyc100/SmartThingsPublic/blob/master/devicetypes/alyc100/warmup-4ie.src/warmup-4ie.groovy), 
+this code is derived from some great work by
+[\@alex0103](https://github.com/alex-0103) to create a [Home Assistant
+Custom Component and Python
+Package](https://github.com/alex-0103/warmup4IE). 
+That has been improved by a number of coders, notably
+[\@foxy82](https://github.com/foxy82/warmup4IE), 
+with valuable contributions and support from 
+[\@artmg](https://github.com/artmg/warmup), 
+[\@rct](https://github.com/rct/warmup), 
+[\@robchandhok](https://github.com/robchandhok/warmup),
+[\@kkoenen](https://github.com/kkoenen/warmup).
+ 
+Thank you to the community who continue to 
+be involved with and support this project. 
+
+Please note that Warmup Plc were not involved 
+in the creation of this software. 
+We do, however, acknowledge their ownership of 
+registered trademarks relating to their brand and products. 
+
+

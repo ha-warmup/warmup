@@ -35,7 +35,7 @@ Recent features from development that have not been formally released yet:
 * 
 
 
-## 2023.03.15-beta
+## 2023.3.19
 
 This is a MAJOR release. Previously this project was focussed on 
 a manually installed cusom_component. This release re-organised it 

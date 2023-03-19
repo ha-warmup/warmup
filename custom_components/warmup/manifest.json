@@ -1,0 +1,12 @@
+{
+  "domain": "warmup",
+  "name": "Warmup",
+  "codeowners": ["@ha-warmup"],
+  "dependencies": [],
+  "documentation": "https://github.com/ha-warmup/warmup/",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/ha-warmup/warmup/issues/",
+  "requirements": [],
+  "version": "2023.03.15-beta"
+}

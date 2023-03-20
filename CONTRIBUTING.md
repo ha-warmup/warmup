@@ -28,14 +28,30 @@ Please raise an issue if you want further guidance on developing new features or
 Once you have completed your development and testing on your changes, 
 then please raise a Pull Request for us to be able to merge in your work. They should be merged into the **dev** branch.
 
+### Project Structure
+
+For the time being, contributors have settled on a 
+[project structure](https://github.com/ha-warmup/warmup/issues/50) 
+that includes:
+
+* HACS integration as a custom repository, with associated metadata files
+* Instructions for manual install as custom_component
+* incorporating any changes to the API-related python code in warmup4ie subfolder
+	* and keeping a tracking copy in the root warmup4ie-PyPi folder for later
+
+
 ## Release
 
-Before bringing changes into the **master** branch, please ensure that you have referenced the changes into [CHANGELOG.md](CHANGELOG.md)
+We use GitHub Releases as good practice, both for a github repo, and for a [HACS integration](https://hacs.xyz/docs/publish/integration/#github-releases-optional).
+
+Before bringing changes into the **master** branch, please ensure that you have referenced the changes into [CHANGELOG.md](CHANGELOG.md) on dev. You could use `git log --oneline` to gather the info.
 
 When releasing a version, please ensure that you update the version in 
 
+```
 custom_components/warmup/manifest.json
+```
 
-Since 2021.5.23, the versioning format has been YYYY.M.D (no leading zeroes), and this should be applied to new Github Releases too.
+You may find it convenient to tag your release candidate. Since 2021.5.23, the versioning format has been YYYY.M.D (no leading zeroes). When raising the PR from your dev to the main project master, remember to ask for a new Github Releases to be created with the same tag.
 
 

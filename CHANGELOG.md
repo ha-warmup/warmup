@@ -16,7 +16,7 @@ Recent features from development that have not been formally released yet:
 
 ### Added
 
-* 
+* 9d4d24d some additions notes and suggestions for project contributors
 
 ### Changed
 
@@ -24,7 +24,7 @@ Recent features from development that have not been formally released yet:
 
 ### Fixed
 
-* 
+* 418503e Bumped version in manifest.json (missed during 2023.3.19 release)
 
 ### Deprecated
 

@@ -44,7 +44,7 @@ that includes:
 
 We use GitHub Releases as good practice, both for a github repo, and for a [HACS integration](https://hacs.xyz/docs/publish/integration/#github-releases-optional).
 
-Before bringing changes into the **master** branch, please ensure that you have referenced the changes into [CHANGELOG.md](CHANGELOG.md) on dev. You could use `git show --oneline` to gather the info.
+Before bringing changes into the **master** branch, please ensure that you have referenced the changes into [CHANGELOG.md](CHANGELOG.md) on dev. You could use `git log --oneline` to gather the info.
 
 When releasing a version, please ensure that you update the version in 
 

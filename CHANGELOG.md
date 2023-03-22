@@ -16,7 +16,7 @@ Recent features from development that have not been formally released yet:
 
 ### Added
 
-* 9d4d24d some additions notes and suggestions for project contributors
+* 
 
 ### Changed
 
@@ -24,7 +24,7 @@ Recent features from development that have not been formally released yet:
 
 ### Fixed
 
-* 418503e Bumped version in manifest.json (missed during 2023.3.19 release)
+* 
 
 ### Deprecated
 
@@ -33,6 +33,21 @@ Recent features from development that have not been formally released yet:
 ### Removed
 
 * 
+
+
+## 2023.3.22
+
+This is a bugfix release. The previous release had a broken HACS manifest.
+
+### Added
+
+* 9d4d24d some additions notes and suggestions for project contributors
+* d9733d9 Tip when changing config, plus slight re-org, in README.md
+
+### Fixed
+
+* 418503e Bumped version in manifest.json (missed during 2023.3.19 release)
+
 
 
 ## 2023.3.19

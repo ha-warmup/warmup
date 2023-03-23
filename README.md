@@ -100,7 +100,10 @@ you should see the following warning in the logs:
 This is a positive sign, as it means 
 the custom component has been successfully loaded. Great! - now carry on.
 
-#### Add the warmup platform manually via YAML
+
+## Configuration
+
+### Add the warmup platform manually via YAML
 
 Then add to your configuration.yaml:
 
@@ -120,7 +123,32 @@ climate:
 After restarting home assistant, the component will be loaded
 automatically.
 
+#### Tip when changing config
+
+If you are winding up having to do multiple restarts because Home Assistant won't shutdown with the updated config file (because when it checks the config file, integration warmup not found) you can get around that by using the CLI command `ha core restart`.    
+
+Alternatively, with the menu restructuring, the menu entry for _Stop Server_ isn't accessible.  However you can use the keyboard short cut 'c' and type restart to find that choice. Once the server has stopped you can move the config entry in and do a `ha core start` 
+
+
+### Add your devices to the dashboard
+
+Our wiki has some [ideas on how to configure warmup
+devices](https://github.com/ha-warmup/warmup/wiki/Configuration-ideas)
+in your Home Assistant instance.
+
+
+## Other installation types
+
+We do **not currently** have instructions for using this software as 
+a _Custom repository_ for **Home Assistant Operating System** (HAOS) 
+or **Home Assistant Container** deployments, 
+but you are welcome to use our issue tracker 
+to discuss any potential improvements to this project. 
+
+
 ### Standalone
+
+_OLD instructions_
 
 You may install the library via pip using
 
@@ -137,23 +165,6 @@ After that, import the library, and away you go.
 >>> device = warmup.get_device_by_name(\"Underfloor\") 
 >>> device.get_current_temperature()
 ```
-
-### Other installation types
-
-We do **not currently** have instructions for using this software as 
-a _Custom repository_ for **Home Assistant Operating System** (HAOS) 
-or **Home Assistant Container** deployments, 
-but you are welcome to use our issue tracker 
-to discuss any potential improvements to this project. 
-
-
-## Configuration
-
-### Add your devices to the dashboard
-
-Our wiki has some [ideas on how to configure warmup
-devices](https://github.com/ha-warmup/warmup/wiki/Configuration-ideas)
-in your Home Assistant instance.
 
 
 

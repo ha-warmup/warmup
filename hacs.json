@@ -1,11 +1,4 @@
 {
   "name": "Warmup under-floor heating integration",
-  "render_readme": false,
-  "domains": [
-    "climate"
-  ],
-  "iot_class": [
-    "Cloud Polling"
-  ]
-
+  "render_readme": false
 }

@@ -14,8 +14,12 @@ are based on date using format YYYY.M.D (no leading zeroes)
 
 Recent features from development that have not been formally released yet:
 
+Getting ready to include this repo in HACS 
+
 ### Added
 
+* 03d09df use hassfest validation for HA custom_component compaibility checks
+* 5b2ace6 Add HACS validate action to workflows
 * 
 
 ### Changed
@@ -24,6 +28,7 @@ Recent features from development that have not been formally released yet:
 
 ### Fixed
 
+* 4820e4f removed invalid entries from hacs.json
 * 
 
 ### Deprecated

@@ -1,6 +1,6 @@
 # HACS validation Action as per https://hacs.xyz/docs/publish/action/
 
-name: Validate
+name: HACS validation
 
 on:
   push:

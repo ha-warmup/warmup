@@ -25,9 +25,6 @@ to work on your local project repository.
 
 Please raise an issue if you want further guidance on developing new features or fixing issues.
 
-Once you have completed your development and testing on your changes, 
-then please raise a Pull Request for us to be able to merge in your work. They should be merged into the **dev** branch.
-
 ### Project Structure
 
 For the time being, contributors have settled on a 
@@ -39,12 +36,23 @@ that includes:
 * incorporating any changes to the API-related python code in warmup4ie subfolder
 	* and keeping a tracking copy in the root warmup4ie-PyPi folder for later
 
+### Pull Requests
+
+Once you have completed your development and testing on your changes, 
+then please raise a Pull Request for us to be able to merge in your work. They should be merged into the **`dev`** branch.
+
+You will see some validation actions launched as part of our HACS compliance. 
+If any of these actions fail, then your Pull Request might be held back.
 
 ## Release
 
-We use GitHub Releases as good practice, both for a github repo, and for a [HACS integration](https://hacs.xyz/docs/publish/integration/#github-releases-optional).
+We use GitHub Releases as good practice, both for a github repo, and for a [HACS integration](https://hacs.xyz/docs/publish/integration/#github-releases-optional). Once the changes applied in the dev branch have been sufficiently tested, then they can be bundled up for a release into the `master` branch,
 
 Before bringing changes into the **master** branch, please ensure that you have referenced the changes into [CHANGELOG.md](CHANGELOG.md) on dev. You could use `git log --oneline` to gather the info.
+
+### Versioning
+
+Since 2021.5.23, the versioning format has been YYYY.M.D (no leading zeroes). Note that HACS does not support the use of candidate suffixes - using a version like YYYY.M.D-beta may break the component. 
 
 When releasing a version, please ensure that you update the version in 
 
@@ -52,6 +60,5 @@ When releasing a version, please ensure that you update the version in
 custom_components/warmup/manifest.json
 ```
 
-You may find it convenient to tag your release candidate. Since 2021.5.23, the versioning format has been YYYY.M.D (no leading zeroes). When raising the PR from your dev to the main project master, remember to ask for a new Github Releases to be created with the same tag.
-
+You may find it convenient to tag your release candidate with the version. When raising the PR from your origin/dev to the main project master, remember to ask for a new Github Release to be created with the same tag.
 

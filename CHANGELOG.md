@@ -35,6 +35,23 @@ Recent features from development that have not been formally released yet:
 * 
 
 
+## 2023.3.27
+
+Ready to include in HACS default repositories 
+
+### Added
+
+* 03d09df use hassfest validation for HA custom_component compaibility checks
+* 5b2ace6 Add HACS validate action to workflows
+* df9d8cc more dev guidelines in CONTRIBUTING.md
+
+### Fixed
+
+* c8eb031 Clarify HACS validation in Actions
+* 4820e4f removed invalid entries from hacs.json
+* 
+
+
 ## 2023.3.22
 
 This is a bugfix release. The previous release had a broken HACS manifest.

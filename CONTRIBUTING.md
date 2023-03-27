@@ -2,12 +2,19 @@
 
 Thank you for your interest in helping out with this project.
 
-Two very straighforward ways of getting involved are:
+Two very straighforward ways of getting involved on your own terms are:
 
 * Issues
     * looking at [issues raised](https://github.com/ha-warmup/warmup/issues) and trying to advise users looking for help, or encouraging them to obtain useful diagnostics
 * Documentation
     * increasing the detail, accuracy or readability in our [documentation wiki](https://github.com/ha-warmup/warmup/wiki)
+
+Otherwise, if you are willing to help us test new features, 
+before they are put on general release, 
+you can set your HACS Integration (re-)download settings 
+to `show beta versions`.
+
+![download-show-beta](docs/images/download-show-beta.png)
 
 If you want to take things further you can get involved with code, 
 either to deal with issues raised or to develop new features. 
@@ -60,5 +67,12 @@ When releasing a version, please ensure that you update the version in
 custom_components/warmup/manifest.json
 ```
 
-You may find it convenient to tag your release candidate with the version. When raising the PR from your origin/dev to the main project master, remember to ask for a new Github Release to be created with the same tag.
+You may find it convenient to tag your release candidate with the version. 
+When raising the PR from your origin/dev to the main project master, 
+remember to ask for a new Github Release to be created with the same tag.
 
+Please be clear if this is a Production release. 
+Otherwise, when the Release is created 
+it should be marked as a Pre-release. 
+That way it will only be available to users who 
+have selected the option 'show beta versions'. 

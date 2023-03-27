@@ -1,3 +1,7 @@
+{% endif %}
+
+## **NB!** This is a beta/pre-release version!
+{% if prerelease %}
 This is a Custom Component to integrate Warmup 
 under-floor heating devices into Home Assistant. 
 

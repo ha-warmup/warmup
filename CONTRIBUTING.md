@@ -21,8 +21,30 @@ either to deal with issues raised or to develop new features.
 
 ## Development
 
+### Forking
+
 As you will use a fork for your development we encourage you to 
 familiarise yourself with the [Github guide to working with forks](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/working-with-forks).
+
+If you Fork the project, it might tell you that 
+workflows are being disabled on your fork. 
+This is good, because they are currently 
+designed only to work on the main fork, 
+so you do NOT want to enable them. 
+If, for any reason, your fork starts to notify you that 
+you have Actions failing, then you should disable them: 
+
+![settings-actions-disable](docs/images/settings-actions-disable.png)
+
+In your OWN fork:
+
+* Settings / Actions / General
+* Actions permissions = Disable
+* remember to Save
+
+Now the Actions tab should disappear from your fork, and the notifications will cease.
+
+### Development practices
     
 All development work should be done on branches created from the **dev** branch. 
 Please ensure you understand [the branching model we follow](https://nvie.com/posts/a-successful-git-branching-model/).

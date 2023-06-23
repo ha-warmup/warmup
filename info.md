@@ -1,7 +1,7 @@
-{% endif %}
-
-## **NB!** This is a beta/pre-release version!
 {% if prerelease %}
+## **NB!** This is a beta/pre-release version!
+
+{% endif %}
 This is a Custom Component to integrate Warmup 
 under-floor heating devices into Home Assistant. 
 
@@ -23,4 +23,4 @@ registered trademarks relating to their brand and products.
 For further information please see the full project README at 
 https://github.com/ha-warmup/warmup
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/ha-warmup/warmup)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)

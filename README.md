@@ -5,6 +5,8 @@ Warmup under-floor heating devices into
 [Home Assistant](https://www.home-assistant.io/). 
 It is compatible with the Home Assistant Community Store (HACS).
 
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
+
 [Warmup Plc](https://www.warmup.co.uk/) 
 manufacture under-floor heating (UFH) and control systems, 
 including a range of wifi-enabled home thermostats. 
@@ -39,16 +41,13 @@ See <https://my.warmup.com/login>
 
 ## Home Assistant Community Store
 
-In your HACS store, look in the _Integrations_ page. 
-In the top right corner select the 3-dots menu, 
-and choose _Custom repositories_. 
-Paste in the URL to this repo, 
+If you have HACS installed, then use this button
 
-<https://github.com/ha-warmup/warmup/>
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-warmup&repository=warmup&category=integration)
 
-and select _Category_: **Integration**. 
+Alternatively Explore HACS Repositories and search for `warmup`
 
-For help see <https://hacs.xyz/docs/faq/custom_repositories/>
+See more detailed instuctions on [installing `warmup` in HACS](docs/install-in-HACS.md)
 
 
 ## Manual installation

@@ -16,7 +16,9 @@ Recent features from development that have not been formally released yet:
 
 ### Added
 
-* 
+* e66cebf Include full documention for HACS installation with images
+* 01b4bb7 How to disable actions when they fail in your OWN fork
+* 909513e Contributing pre-releases (beta versions)
 
 ### Changed
 

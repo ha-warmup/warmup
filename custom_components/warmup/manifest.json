@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/ha-warmup/warmup/issues/",
   "requirements": [],
-  "version": "2023.3.27"
+  "version": "2024.2.7"
 }

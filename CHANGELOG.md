@@ -16,9 +16,7 @@ Recent features from development that have not been formally released yet:
 
 ### Added
 
-* e66cebf Include full documention for HACS installation with images
-* 01b4bb7 How to disable actions when they fail in your OWN fork
-* 909513e Contributing pre-releases (beta versions)
+* 
 
 ### Changed
 
@@ -26,6 +24,45 @@ Recent features from development that have not been formally released yet:
 
 ### Fixed
 
+* 
+
+### Documented
+
+* 
+
+### Deprecated
+
+* 
+
+### Removed
+
+* 
+
+
+## 2024.2.7 Pre-release
+
+Prepare for HA Core 2025.1 release, by moving deprecated Contants to Enums. Triggered by HA Core 2023.12 release logging deprecation warnings on startup.
+
+### Added
+
+* 
+
+### Changed
+
+* 
+
+### Fixed
+
+* 38ef7ae Updated to use new ENUM constants instead of deprecated ones (Issue #65)
+* 
+
+### Documented
+
+* d743cb6 more testing methods in CONTRIBUTING.md
+* 0677520 minor doc link for installation types
+* e66cebf Include full documention for HACS installation with images
+* 01b4bb7 How to disable actions when they fail in your OWN fork
+* 909513e Contributing pre-releases (beta versions)
 * 
 
 ### Deprecated

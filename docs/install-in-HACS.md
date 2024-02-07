@@ -4,6 +4,7 @@ This assumes you have already installed the Home Assistant Community Store follo
 
 https://hacs.xyz/docs/setup/prerequisites
 
+If you want other kinds if installation, please see [README](../README.md).
 
 ## Default installation
 

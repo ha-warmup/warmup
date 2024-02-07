@@ -8,17 +8,12 @@ from .warmup4ie import Warmup4IE, Warmup4IEDevice
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+    HVACAction,
+    HVACMode,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_HOME,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -26,7 +21,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     PRECISION_HALVES,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.exceptions import InvalidStateError, PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -65,15 +60,15 @@ CONST_MODE_FROST = "frost"  # Frost Mode (treated as Away/Heat)
 CONST_MODE_OFF = "off"  # Switch off heating in a zone
 
 HVAC_MAP_WARMUP_HEAT = {
-    CONST_MODE_PROGRAM: HVAC_MODE_AUTO,
-    CONST_MODE_FIXED: HVAC_MODE_HEAT,
-    CONST_MODE_AWAY: HVAC_MODE_AUTO,
-    CONST_MODE_FROST: HVAC_MODE_HEAT,
-    CONST_MODE_OFF: HVAC_MODE_OFF,
+    CONST_MODE_PROGRAM: HVACMode.AUTO,
+    CONST_MODE_FIXED: HVACMode.HEAT,
+    CONST_MODE_AWAY: HVACMode.AUTO,
+    CONST_MODE_FROST: HVACMode.HEAT,
+    CONST_MODE_OFF: HVACMode.OFF,
 }
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-SUPPORT_HVAC_HEAT = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
+SUPPORT_FLAGS = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+SUPPORT_HVAC_HEAT = [HVACMode.HEAT, HVACMode.AUTO, HVACMode.OFF]
 SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME, PRESET_BOOST]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -176,21 +171,21 @@ class WarmupThermostat(ClimateEntity):
     def hvac_mode(self):
         """Return hvac operation ie. heat, cool mode.
 
-        Need to be one of HVAC_MODE_*.
+        Need to be one of HVACMode.
         """
-        return HVAC_MAP_WARMUP_HEAT.get(self._current_operation_mode, HVAC_MODE_AUTO)
+        return HVAC_MAP_WARMUP_HEAT.get(self._current_operation_mode, HVACMode.AUTO)
 
     @property
     def hvac_action(self):
         """Return the current running hvac operation if supported.
 
-        Need to be one of CURRENT_HVAC_*.
+        Need to be one of HVACAction.
         """
         if not self._on:
-            return CURRENT_HVAC_OFF
+            return HVACAction.OFF
         if not self._away:
-            return CURRENT_HVAC_HEAT
-        return CURRENT_HVAC_IDLE
+            return HVACAction.HEATING
+        return HVACAction.IDLE
 
     @property
     def preset_mode(self):
@@ -237,17 +232,17 @@ class WarmupThermostat(ClimateEntity):
         Switch device on if was previously off
         """
 
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             self._on = False
             self._device.set_location_to_off()
             self._current_operation_mode = CONST_MODE_OFF
 
-        elif hvac_mode == HVAC_MODE_AUTO:
+        elif hvac_mode == HVACMode.AUTO:
             self._on = True
             self._device.set_temperature_to_auto()
             self._current_operation_mode = CONST_MODE_PROGRAM
 
-        elif hvac_mode == HVAC_MODE_HEAT:
+        elif hvac_mode == HVACMode.HEAT:
             self._on = True
             self._device.set_temperature_to_manual()
             self._current_operation_mode = CONST_MODE_FIXED
@@ -316,7 +311,7 @@ class WarmupThermostat(ClimateEntity):
     def min_temp(self):
         """Return the minimum temperature."""
         # return convert_temperature(
-        #    self._device.min_temp, TEMP_CELSIUS, self.hass.config.units.temperature_unit
+        #    self._device.min_temp, UnitOfTemperature.CELSIUS, self.hass.config.units.temperature_unit
         # )
         return self._device.min_temp
 
@@ -324,7 +319,7 @@ class WarmupThermostat(ClimateEntity):
     def max_temp(self):
         """Return the maximum temperature."""
         # return convert_temperature(
-        #     self._device.max_temp, TEMP_CELSIUS, self.hass.config.units.temperature_unit
+        #     self._device.max_temp, UnitOfTemperature.CELSIUS, self.hass.config.units.temperature_unit
         # )
         return self._device.max_temp
 
@@ -341,7 +336,7 @@ class WarmupThermostat(ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def target_temperature_step(self):

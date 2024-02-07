@@ -2,24 +2,70 @@
 
 Thank you for your interest in helping out with this project.
 
-Two very straighforward ways of getting involved on your own terms are:
+In ascending order of complexity, here are ways you can get involved with this project:
 
 * Issues
     * looking at [issues raised](https://github.com/ha-warmup/warmup/issues) and trying to advise users looking for help, or encouraging them to obtain useful diagnostics
 * Documentation
-    * increasing the detail, accuracy or readability in our [documentation wiki](https://github.com/ha-warmup/warmup/wiki)
+    * increasing the detail, accuracy or readability in:
+	    * our [documentation wiki](https://github.com/ha-warmup/warmup/wiki) (which you can edit directly) or 
+	    * any of the readme files accompanying the code (which will require a pull request)
+* Testing
+	* when candidate fixes are posted against issues, you can load the modified code yourself and give it a go, to see if it works well under your own circumstances
+* Coding (Development)
+	* modifying the programme source code or configuration defaults in order to rectify reported issues, or to work on new features
 
-Otherwise, if you are willing to help us test new features, 
+## Testing
+
+## Beta
+
+If you are willing to help us test new features, 
 before they are put on general release, 
 you can set your HACS Integration (re-)download settings 
 to `show beta versions`.
 
 ![download-show-beta](docs/images/download-show-beta.png)
 
-If you want to take things further you can get involved with code, 
-either to deal with issues raised or to develop new features. 
+Please report any failure with specific messages or circumstance, in the relevant issue ticket. If you get none, then please report your success, so that we know we are closer to promoting the fix towards the main live release.
+
+## Alpha testing
+
+If you are suffering with a specific issue yourself, or are just happy to get involved in earlier testing, you can obtain earlier releases of code in different ways, depending on your setup.
+
+Let's suppose that someone has submitted a Pull Request (PR) for a branch called `fix232_v2`, here are a couple of methods.
+
+#### Alternative manual install
+
+If you installed your set up manually, you can use the [alternative manual install method](https://github.com/ha-warmup/warmup?tab=readme-ov-file#alternative-versions) specifying the branch, e.g. 
+
+```
+git clone -b fix232_v2 https://github.com/ha-warmup/warmup.git /tmp/warmup
+```
+
+#### HACS install.service
+
+You can install a specific branch on HASOS / HACS by calling the update.install service
+
+```
+service: update.install
+data:
+  version: fix232_v2
+target:
+  entity_id: update.warmup_under_floor_heating_integration_update
+```
 
 ## Development
+
+### Project Structure
+
+For the time being, contributors have settled on a 
+[project structure](https://github.com/ha-warmup/warmup/issues/50) 
+that includes:
+
+* HACS integration as a custom repository, with associated metadata files
+* Instructions for manual install as custom_component
+* incorporating any changes to the API-related python code in warmup4ie subfolder
+	* and keeping a tracking copy in the root warmup4ie-PyPi folder for later
 
 ### Forking
 
@@ -53,17 +99,6 @@ Both of the above-linked guides also include command examples for you
 to work on your local project repository. 
 
 Please raise an issue if you want further guidance on developing new features or fixing issues.
-
-### Project Structure
-
-For the time being, contributors have settled on a 
-[project structure](https://github.com/ha-warmup/warmup/issues/50) 
-that includes:
-
-* HACS integration as a custom repository, with associated metadata files
-* Instructions for manual install as custom_component
-* incorporating any changes to the API-related python code in warmup4ie subfolder
-	* and keeping a tracking copy in the root warmup4ie-PyPi folder for later
 
 ### Pull Requests
 

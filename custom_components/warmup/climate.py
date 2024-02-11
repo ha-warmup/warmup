@@ -67,7 +67,7 @@ HVAC_MAP_WARMUP_HEAT = {
     CONST_MODE_OFF: HVACMode.OFF,
 }
 
-SUPPORT_FLAGS = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+SUPPORT_FLAGS = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TURN_ON |ClimateEntityFeature.TURN_OFF
 SUPPORT_HVAC_HEAT = [HVACMode.HEAT, HVACMode.AUTO, HVACMode.OFF]
 SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME, PRESET_BOOST]
 
@@ -151,6 +151,9 @@ class WarmupThermostat(ClimateEntity):
         self._current_operation_mode = device.run_mode
         self._away = False
         self._on = True
+        # 2024.2 warned about this, we don't need it anymore
+        self._enable_turn_on_off_backwards_compatibility = False
+        
 
     @property
     def name(self):
@@ -166,6 +169,26 @@ class WarmupThermostat(ClimateEntity):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temperature
+
+    @property
+    def turn_on(self) -> None:
+        """Turn the entity on."""
+        self.set_hvac_mode(HVACMode.AUTO)
+
+    @property
+    async def async_turn_on(self) -> None:
+        """Turn the entity on, which means AUTO for us."""
+        await self.hass.async_add_executor_job(self.set_hvac_mode, HVACMode.AUTO)
+
+    @property
+    def turn_off(self) -> None:
+        """Turn the entity off."""
+        self.set_hvac_mode(HVACMode.OFF)
+
+    @property
+    async def async_turn_off(self) -> None:
+        """Turn the entity off."""
+        await self.hass.async_add_executor_job(self.set_hvac_mode, HVACMode.OFF)
 
     @property
     def hvac_mode(self):

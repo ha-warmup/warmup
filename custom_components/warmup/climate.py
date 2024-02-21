@@ -22,7 +22,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     PRECISION_HALVES,
     UnitOfTemperature,
+    MAJOR_VERSION, 
+    MINOR_VERSION,
 )
+
 from homeassistant.exceptions import InvalidStateError, PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -67,7 +70,7 @@ HVAC_MAP_WARMUP_HEAT = {
     CONST_MODE_OFF: HVACMode.OFF,
 }
 
-SUPPORT_FLAGS = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+SUPPORT_FLAGS = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TURN_ON |ClimateEntityFeature.TURN_OFF
 SUPPORT_HVAC_HEAT = [HVACMode.HEAT, HVACMode.AUTO, HVACMode.OFF]
 SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME, PRESET_BOOST]
 
@@ -151,6 +154,9 @@ class WarmupThermostat(ClimateEntity):
         self._current_operation_mode = device.run_mode
         self._away = False
         self._on = True
+
+        # https://developers.home-assistant.io/blog/2024/01/24/climate-climateentityfeatures-expanded
+        self._enable_turn_on_off_backwards_compatibility = False
 
     @property
     def name(self):
@@ -249,6 +255,14 @@ class WarmupThermostat(ClimateEntity):
 
         else:
             raise InvalidStateError
+
+    def turn_on(self) -> None:
+        """Turn the entity on."""
+        self.set_hvac_mode(HVACMode.AUTO)
+
+    def turn_off(self) -> None:
+        """Turn the entity off."""
+        self.set_hvac_mode(HVACMode.OFF)
 
     def set_override(self, temperature, until):
         """Set a temperature override for this thermostat."""

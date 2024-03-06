@@ -39,22 +39,28 @@ Recent features from development that have not been formally released yet:
 * 
 
 
+## 2024.3.6 release
+
+Initial support for new entity features in Climate entity, preparing for HA Core 2025.1. 
+This will suppress deprecation warnings under Home Assistant Core 2024.2 and later.
+
+### Fixed
+
+* bf778a8 Fixes deprecation warnings in HA 2024.2.x (#74)
+
+### Documented
+
+* 95e1dab doc: move a release from beta to production
+* 375a870 Changelog and manifest ready for Pre-Release 2024.2.7
+
+
 ## 2024.2.7 Pre-release
 
 Prepare for HA Core 2025.1 release, by moving deprecated Contants to Enums. Triggered by HA Core 2023.12 release logging deprecation warnings on startup.
 
-### Added
-
-* 
-
-### Changed
-
-* 
-
 ### Fixed
 
 * 38ef7ae Updated to use new ENUM constants instead of deprecated ones (Issue #65)
-* 
 
 ### Documented
 
@@ -63,14 +69,6 @@ Prepare for HA Core 2025.1 release, by moving deprecated Contants to Enums. Trig
 * e66cebf Include full documention for HACS installation with images
 * 01b4bb7 How to disable actions when they fail in your OWN fork
 * 909513e Contributing pre-releases (beta versions)
-* 
-
-### Deprecated
-
-* 
-
-### Removed
-
 * 
 
 

@@ -133,3 +133,12 @@ Otherwise, when the Release is created
 it should be marked as a Pre-release. 
 That way it will only be available to users who 
 have selected the option 'show beta versions'. 
+
+When community testing shows that a Prerelease is ready for mainstream use:
+* in the main ha-warmup repository, go into [Code / Tags / Releases](https://github.com/ha-warmup/warmup/releases)
+* find the Prerelease and Edit it
+* remove mentions in the text of this being a Prerelease
+* uncheck the box `Set as a pre-release`
+* check the box `Set as the latest release`
+* click Update Release
+This should make that the target of https://github.com/ha-warmup/warmup/releases/latest and therefore the version that most HACS users will be updated to.

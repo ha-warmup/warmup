@@ -128,7 +128,17 @@ If you are winding up having to do multiple restarts because Home Assistant won'
 
 Alternatively, with the menu restructuring, the menu entry for _Stop Server_ isn't accessible.  However you can use the keyboard short cut 'c' and type restart to find that choice. Once the server has stopped you can move the config entry in and do a `ha core start` 
 
+#### Debugging flags
 
+If you do encounter issues, here are the logger settings in the Home Assistant configuration file you use to set debug or other levels of logging.
+
+```
+logger:
+  default: warning
+  logs:
+    custom_components.warmup.climate: debug
+    custom_components.warmup.warmup4ie.warmup4ie: debug
+```
 ### Add your devices to the dashboard
 
 Our wiki has some [ideas on how to configure warmup

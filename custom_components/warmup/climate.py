@@ -189,7 +189,10 @@ class WarmupThermostat(ClimateEntity):
         """
         if not self._on:
             return HVACAction.OFF
-        if not self._away:
+        if self._away:
+            return HVACAction.IDLE
+        """ Infer if heating is active """
+        if self._target_temperature is not None and (self._current_temperature <= self._target_temperature):
             return HVACAction.HEATING
         return HVACAction.IDLE
 

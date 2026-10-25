@@ -102,9 +102,21 @@ the custom component has been successfully loaded. Great! - now carry on.
 
 ## Configuration
 
-### Add the warmup platform manually via YAML
+### Add the warmup integration via the UI
 
-Then add to your configuration.yaml:
+Once the custom component is installed, go to
+**Settings -> Devices & Services -> Add Integration**, search for
+**Warmup**, and enter the email address and password you use to log in to
+the My Warmup app or website.
+
+If your Warmup password changes later, Home Assistant will show a
+re-authentication prompt on the existing integration entry; you don't
+need to remove and re-add it.
+
+### Migrating from YAML configuration
+
+Older versions of this integration were configured directly in
+`configuration.yaml`:
 
 ```yaml
 climate:
@@ -113,14 +125,16 @@ climate:
     password: YOUR_PASSWORD
 ```
 
--   **username** (required): the username used to login to the warmup
-    web site
--   **password** (required): the password used to login to the warmup
-    web site; may be moved to the secrets.yaml file. See
-    [secrets](https://www.home-assistant.io/docs/configuration/secrets/)
+This style of configuration is **deprecated**. If it is still present in
+your `configuration.yaml`, Home Assistant automatically imports it into a
+config entry on startup (equivalent to adding it through the UI as above)
+and raises a repair issue asking you to remove the `climate:` block for
+that account. Your existing `warmup.*` entities keep the same
+`entity_id`s and history across this migration.
 
-After restarting home assistant, the component will be loaded
-automatically.
+Once you've removed the YAML and restarted Home Assistant, the
+integration continues to work exactly as before, managed entirely from
+**Settings -> Devices & Services**.
 
 #### Tip when changing config
 

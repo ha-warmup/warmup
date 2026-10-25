@@ -13,7 +13,9 @@ have an API.
 This software enables communication via this API, 
 and allows Home Assistant to read and control the supported devices, 
 using a python script to perform the integration. 
-It is compatible with the Home Assistant Community Store (HACS).
+It is compatible with the Home Assistant Community Store (HACS), and is
+set up via the Home Assistant UI (Settings -> Devices & Services -> Add
+Integration). Existing YAML configuration is automatically imported.
 
 Please note that Warmup Plc were not involved 
 in the creation of this software, 

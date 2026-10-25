@@ -1,4 +1,5 @@
 {
   "name": "Warmup under-floor heating integration",
-  "render_readme": false
+  "render_readme": false,
+  "homeassistant": "2024.12.0"
 }

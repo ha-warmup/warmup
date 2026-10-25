@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 RUN_MODE = {0: 'off',
             1: 'prog',
-            2: 'overide',
+            2: 'override',
             3: 'fixed',
             4: 'frost',
             5: 'away',
@@ -51,17 +51,34 @@ HEATING_TARGET = {
 
 class Warmup4IE:
     TOKEN_URL = 'https://api.warmup.com/apps/app/v1'
+    LOGIN_URL = 'https://apil.warmup.com/login'
     URL = 'https://apil.warmup.com/graphql'
+    # Same token the current Warmup Android app ships, used as both the V1
+    # "APP-Token" and the V2 "API-Token".
     APP_TOKEN = \
-        'M=;He<Xtg"$}4N%5k{$:PD+WA"]D<;#PriteY|VTuA>_iyhs+vA"4lic{6-LqNM:'
-    HEADER = {'user-agent': 'WARMUP_APP',
-              'accept-encoding': 'br, gzip, deflate',
-              'accept': '*/*',
-              'Connection': 'keep-alive',
-              'content-type': 'application/json',
-              'app-token': APP_TOKEN,
-              'app-version': '1.8.1',
-              'accept-language': 'de-de'}
+        'HIBc*vAPbvc6gtL6xYvQNxjLW8nscZ72K,4k6ioUxo3dyAsd1QoCe96-\'O3qy5Ai'
+    APP_ID = 'WARMUP-APP-V001'
+    COMMON_HEADER = {'accept-encoding': 'br, gzip, deflate',
+                      'accept': '*/*',
+                      'Connection': 'keep-alive',
+                      'content-type': 'application/json',
+                      'app-version': '1.9.12',
+                      'accept-language': 'de-de'}
+
+    def _v1_headers(self):
+        """Headers for api.warmup.com/apps/app/v1 calls."""
+        headers = self.COMMON_HEADER.copy()
+        headers['user-agent'] = 'WARMUP_APP'
+        headers['app-token'] = self.APP_TOKEN
+        return headers
+
+    def _v2_headers(self):
+        """Headers for apil.warmup.com calls (login, graphql)."""
+        headers = self.COMMON_HEADER.copy()
+        headers['user-agent'] = 'WARMUP_API'
+        headers['api-token'] = self.APP_TOKEN
+        headers['warmup-authorization'] = str(self._warmup_access_token or '')
+        return headers
 
     def __init__(self, user, password):
         """Initialize the climate device."""
@@ -80,15 +97,64 @@ class Warmup4IE:
             self.setup_finished = True
 
     def connect(self):
-        """retrieve access token from server"""
+        """Retrieve access token from server.
+
+        The current app logs in via the V2 endpoint. Fall back to the old V1
+        login only if the V2 endpoint itself is unavailable or returns
+        something unexpected - not if the credentials are simply rejected.
+        """
+        result = self._login_v2()
+        if result is not None:
+            return result
+        return self._login_v1()
+
+    def _login_v2(self):
+        """Try the V2 login API.
+
+        Returns True on success, False on a definitive authentication
+        failure (do not fall back to V1), or None if the V2 endpoint itself
+        failed to answer sensibly (caller should fall back to V1).
+        """
+        body = {'email': self._user,
+                'password': self._password,
+                'appId': self.APP_ID}
+
+        try:
+            response = requests.post(url=self.LOGIN_URL, headers=self._v2_headers(), json=body)
+        except requests.RequestException as err:
+            _LOGGER.warning("V2 login request failed (%s), falling back to V1 login", err)
+            return None
+
+        if response.status_code in (401, 403):
+            _LOGGER.error("generating AccessToken failed, %s", response)
+            return False
+
+        if response.status_code != 200:
+            _LOGGER.warning(
+                "V2 login returned status %s, falling back to V1 login", response.status_code)
+            return None
+
+        try:
+            token = response.json()['response']['token']
+        except (ValueError, KeyError, TypeError):
+            _LOGGER.warning(
+                "V2 login response had an unexpected shape, falling back to V1 login: %s",
+                response.text)
+            return None
+
+        self._warmup_access_token = token
+        return True
+
+    def _login_v1(self):
+        """Fall back to the legacy V1 login endpoint."""
         body = {'request':
                     {'email': self._user,
                      'password': self._password,
                      'method': 'userLogin',
-                     'appId': 'WARMUP-APP-V001'}
+                     'appId': self.APP_ID}
                 }
 
-        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
+        response = requests.post(url=self.TOKEN_URL, headers=self._v1_headers(), json=body)
         # check if request was accepted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':
@@ -112,7 +178,7 @@ class Warmup4IE:
                 "method": "getLocations"
             }
         }
-        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
+        response = requests.post(url=self.TOKEN_URL, headers=self._v1_headers(), json=body)
         # check if request was accepted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':
@@ -197,9 +263,7 @@ class Warmup4IE:
                 "}  "
                 "} "
         }
-        header_with_token = self.HEADER.copy()
-        header_with_token['warmup-authorization'] = str(self._warmup_access_token)
-        response = requests.post(url=self.URL, headers=header_with_token, json=body)
+        response = requests.post(url=self.URL, headers=self._v2_headers(), json=body)
         # check if request was accepted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status'] != 'success':
@@ -248,7 +312,7 @@ class Warmup4IE:
             }
         }
 
-        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
+        response = requests.post(url=self.TOKEN_URL, headers=self._v1_headers(), json=body)
         # check if request was accepted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':
@@ -282,7 +346,7 @@ class Warmup4IE:
                 }
             }
         }
-        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
+        response = requests.post(url=self.TOKEN_URL, headers=self._v1_headers(), json=body)
         # check if request was accepted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':
@@ -312,7 +376,7 @@ class Warmup4IE:
         if temperature is not None:
             body["request"]["fixed"] = {"fixedTemp": "{:03d}".format(int(temperature * 10))}
 
-        response = requests.post(url=self.TOKEN_URL, headers=self.HEADER, json=body)
+        response = requests.post(url=self.TOKEN_URL, headers=self._v1_headers(), json=body)
         # check if request was accepted and if request was successful
         if response.status_code != 200 or \
                 response.json()['status']['result'] != 'success':

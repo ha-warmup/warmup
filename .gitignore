@@ -2,3 +2,5 @@
 /warmup4ie-PyPi/dist/*
 /warmup4ie-PyPi/warmup4ie.egg-info/*
 warmup4ie-PyPi/warmup4ie/__pycache__/
+__pycache__/
+.pytest_cache/

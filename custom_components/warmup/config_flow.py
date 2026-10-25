@@ -44,10 +44,6 @@ class WarmupConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._reauth_entry_data: dict[str, Any] | None = None
-
     async def _async_try_login(
         self, username: str, password: str
     ) -> dict[str, str]:
@@ -120,7 +116,6 @@ class WarmupConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: dict[str, Any]
     ) -> ConfigFlowResult:
         """Handle a reauthentication flow."""
-        self._reauth_entry_data = dict(entry_data)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

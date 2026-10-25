@@ -39,6 +39,18 @@ Recent features from development that have not been formally released yet:
 * 
 
 
+## 2026.10.25 release
+
+### Changed
+
+* Log in using Warmup's current login API, as used by the official app, falling back to the previous login if it is unavailable
+* Send the same request headers and app token as the current official app
+
+### Fixed
+
+* Correct the `override` run mode name
+
+
 ## 2024.3.6 release
 
 Initial support for new entity features in Climate entity, preparing for HA Core 2025.1. 

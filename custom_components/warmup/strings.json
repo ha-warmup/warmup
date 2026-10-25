@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Warmup",
+        "description": "Enter the username and password you use to sign in to the My Warmup app or website.",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Warmup",
+        "description": "The password for {username} is no longer valid. Enter the current password to continue.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid username or password.",
+      "cannot_connect": "Unable to connect to the Warmup servers.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This Warmup account is already configured.",
+      "reauth_successful": "Re-authentication was successful.",
+      "invalid_auth": "Invalid username or password.",
+      "cannot_connect": "Unable to connect to the Warmup servers.",
+      "unknown": "Unexpected error."
+    }
+  },
+  "issues": {
+    "yaml_deprecated": {
+      "title": "Warmup YAML configuration is deprecated",
+      "description": "Configuring Warmup ({username}) via `climate:` in `configuration.yaml` is deprecated and has been automatically imported as a config entry. Remove the `platform: warmup` entry for {username} from your `configuration.yaml` and restart Home Assistant."
+    }
+  }
+}

@@ -2,6 +2,7 @@
   "domain": "warmup",
   "name": "Warmup",
   "codeowners": ["@ha-warmup"],
+  "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/ha-warmup/warmup/",
   "integration_type": "hub",

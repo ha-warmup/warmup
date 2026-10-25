@@ -1,4 +1,6 @@
 """Platform that offers a connection to a warmup device."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Dict
@@ -15,36 +17,28 @@ from homeassistant.components.climate.const import (
     PRESET_HOME,
     ClimateEntityFeature,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     CONF_PASSWORD,
     CONF_USERNAME,
     PRECISION_HALVES,
     UnitOfTemperature,
-    MAJOR_VERSION, 
-    MINOR_VERSION,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform, issue_registry as ir
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from homeassistant.exceptions import InvalidStateError, PlatformNotReady
+from homeassistant.exceptions import InvalidStateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
+from . import WarmupConfigEntry
+from .const import DOMAIN
+
 """ temperature utility will stop working in HA 2023.4. Removed it for now, as CELCIUS is the only temperature standard this module supports anyway. """
 # from homeassistant.util.temperature import convert as convert_temperature
-
-DOMAIN = "warmup"
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,48 +68,81 @@ SUPPORT_FLAGS = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.P
 SUPPORT_HVAC_HEAT = [HVACMode.HEAT, HVACMode.AUTO, HVACMode.OFF]
 SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME, PRESET_BOOST]
 
+# Kept only so that users who still have `climate: - platform: warmup`
+# in configuration.yaml don't get a broken config on upgrade. The platform
+# no longer creates entities directly: it imports the YAML config into a
+# config entry (see async_setup_platform below) and the entities are then
+# created from that config entry by async_setup_entry.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
 
+SERVICE_SET_OVERRIDE = "set_override"
+SERVICE_SET_OVERRIDE_SCHEMA = {
+    vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
+    vol.Optional(ATTR_UNTIL): cv.string,
+}
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the climate devices."""
-    hass.data.setdefault(DOMAIN, {})
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Import the YAML configured platform into a config entry.
 
-    def service_set_override(call):
-        """Handle the service call."""
-        entity_id = call.data.get(ATTR_ENTITY_ID)
-        temperature = call.data.get(ATTR_TEMPERATURE)
-        until = call.data.get(
-            ATTR_UNTIL, (datetime.now() + timedelta(hours=1)).strftime("%H:%M")
+    No entities are created here any more. This only triggers an import
+    flow to create (or find the existing) config entry, and raises a
+    repair issue telling the user that the YAML configuration is
+    deprecated and can be removed.
+    """
+    username = config[CONF_USERNAME]
+
+    issue_id = f"yaml_deprecated_{username.lower()}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        breaks_in_ha_version=None,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="yaml_deprecated",
+        translation_placeholders={"username": username},
+    )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=dict(config),
         )
-        target_devices = [
-            dev for dev in hass.data[DOMAIN]["entities"] if dev.entity_id in entity_id
-        ]
-        target_device: WarmupThermostat
-        for target_device in target_devices:
-            target_device.set_override(temperature, until)
-            target_device.schedule_update_ha_state(True)
+    )
 
-    _LOGGER.info("Setting up platform for Warmup component")
-    user = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
 
-    warmup = Warmup4IE(user, password)
-
-    if warmup is None or not warmup.setup_finished:
-        raise PlatformNotReady
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: WarmupConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Warmup climate entities from a config entry."""
+    warmup: Warmup4IE = entry.runtime_data
     warmup_client = WarmupClient(warmup)
-    to_add = []
-    for device in warmup.get_all_devices().values():
-        to_add.append(WarmupThermostat(hass, device, warmup_client))
-    add_entities(to_add)
-    hass.data[DOMAIN]["entities"] = to_add
-    hass.services.register(DOMAIN, "set_override", service_set_override)
-    return True
+
+    entities = [
+        WarmupThermostat(hass, device, warmup_client)
+        for device in warmup.get_all_devices().values()
+    ]
+    async_add_entities(entities)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_OVERRIDE,
+        SERVICE_SET_OVERRIDE_SCHEMA,
+        "set_override",
+    )
 
 
 class WarmupClient:
@@ -264,9 +291,12 @@ class WarmupThermostat(ClimateEntity):
         """Turn the entity off."""
         self.set_hvac_mode(HVACMode.OFF)
 
-    def set_override(self, temperature, until):
+    def set_override(self, temperature, until=None):
         """Set a temperature override for this thermostat."""
+        if until is None:
+            until = (datetime.now() + timedelta(hours=1)).strftime("%H:%M")
         self._device.set_override(temperature, until)
+        self.schedule_update_ha_state(True)
 
     def update(self):
         """Fetch new state data for this device.

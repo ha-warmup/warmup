@@ -108,6 +108,19 @@ then please raise a Pull Request for us to be able to merge in your work. They s
 You will see some validation actions launched as part of our HACS compliance. 
 If any of these actions fail, then your Pull Request might be held back.
 
+### Tests and linting
+
+CI runs [ruff](https://docs.astral.sh/ruff/) and the pytest suite on every pull request. To run them locally with [uv](https://docs.astral.sh/uv/) and Python 3.14:
+
+```sh
+uv venv -p 3.14 && source .venv/bin/activate
+uv pip install -r requirements_test.txt --override requirements_test_override.txt
+ruff check . && ruff format --check .
+python -m pytest
+```
+
+Use `python -m pytest` rather than `pytest`, so that `tests.ha_compat` can be imported.
+
 ## Release
 
 We use GitHub Releases as good practice, both for a github repo, and for a [HACS integration](https://hacs.xyz/docs/publish/integration/#github-releases-optional). Once the changes applied in the dev branch have been sufficiently tested, then they can be bundled up for a release into the `master` branch,
@@ -123,6 +136,8 @@ When releasing a version, please ensure that you update the version in
 ```
 custom_components/warmup/manifest.json
 ```
+
+The Marketplace and HACS read the version from `manifest.json` at the release tag, so bump it before you tag. CI enforces this: a pull request fails until `manifest.json` holds a version newer than the latest release, and publishing a release fails the "Version check" workflow if the tag (without its `v`) doesn't match `manifest.json`.
 
 You may find it convenient to tag your release candidate with the version. 
 When raising the PR from your origin/dev to the main project master, 

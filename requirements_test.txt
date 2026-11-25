@@ -1,0 +1,5 @@
+# Test and lint dependencies. Install with uv so the Home Assistant override in
+# requirements_test_override.txt applies:
+#   uv pip install -r requirements_test.txt --override requirements_test_override.txt
+pytest-homeassistant-custom-component==0.13.375
+ruff==0.17.6

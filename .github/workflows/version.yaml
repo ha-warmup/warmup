@@ -1,0 +1,51 @@
+# The Marketplace and HACS read the version from manifest.json at the release
+# tag, so manifest.json must already hold the release's version when the tag is
+# created.
+
+name: Version check
+
+on:
+  pull_request:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+env:
+  MANIFEST: custom_components/warmup/manifest.json
+
+jobs:
+  newer-than-latest-release:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: manifest.json version is newer than the latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(jq -r .version "$MANIFEST")
+          latest=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName 2>/dev/null || true)
+          latest=${latest#v}
+          echo "manifest.json: $version, latest release: ${latest:-none}"
+          newest=$(printf '%s\n%s\n' "$latest" "$version" | sort -V | tail -n1)
+          if [ -n "$latest" ] && { [ "$version" = "$latest" ] || [ "$newest" != "$version" ]; }; then
+            echo "::error file=$MANIFEST::Version $version is not newer than the latest release ($latest). Bump \"version\" in $MANIFEST."
+            exit 1
+          fi
+
+  matches-release-tag:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: manifest.json version matches the release tag
+        run: |
+          version=$(jq -r .version "$MANIFEST")
+          tag=${GITHUB_REF_NAME#v}
+          echo "manifest.json: $version, release tag: $GITHUB_REF_NAME"
+          if [ "$version" != "$tag" ]; then
+            echo "::error file=$MANIFEST::Release $GITHUB_REF_NAME was tagged with manifest.json version $version. The Marketplace and HACS will show $version."
+            exit 1
+          fi

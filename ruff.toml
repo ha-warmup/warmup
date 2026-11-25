@@ -1,0 +1,15 @@
+target-version = "py314"
+extend-exclude = ["warmup4ie-PyPi"]
+
+[lint]
+select = [
+    "E4", "E7", "E9", # pycodestyle errors
+    "F",              # pyflakes
+    "I",              # import sorting
+    "UP",             # pyupgrade
+]
+
+[lint.isort]
+force-sort-within-sections = true
+known-first-party = ["custom_components"]
+combine-as-imports = true

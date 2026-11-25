@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import logging
 
-import requests
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+import requests
 
 from .coordinator import WarmupCoordinator
 from .warmup4ie import Warmup4IE

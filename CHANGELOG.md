@@ -25,6 +25,12 @@ Recent features from development that have not been formally released yet:
 * Thermostats show their real mode and preset straight after Home Assistant starts, and update straight after a command
 * If Warmup rejects an update the integration logs in again, and asks you to reauthenticate if that fails
 
+### Development
+
+* CI runs ruff (lint and format) and the pytest suite on every pull request
+* CI checks that `manifest.json` holds a version newer than the latest release, and that a published release's tag matches it
+* `manifest.json` version is now set for the next release; v2026.10.31 and v2026.11.25 reported 2026.10.25
+
 ### Documented
 
 * `LICENSE` is now the plain-text Apache 2.0 licence (was `LICENSE.md`), so GitHub and HACS validation recognise it

@@ -1,0 +1,31 @@
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.4.0
+      - name: Ruff lint
+        run: uvx ruff@0.17.6 check --output-format=github .
+      - name: Ruff format
+        run: uvx ruff@0.17.6 format --check .
+
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.4.0
+        with:
+          python-version: "3.14"
+          activate-environment: true
+      - name: Install test dependencies
+        run: uv pip install -r requirements_test.txt --override requirements_test_override.txt
+      - name: Run tests
+        run: python -m pytest

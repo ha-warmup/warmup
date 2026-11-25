@@ -13,7 +13,8 @@ have an API.
 This software enables communication via this API, 
 and allows Home Assistant to read and control the supported devices, 
 using a python script to perform the integration. 
-It is compatible with the Home Assistant Community Store (HACS), and is
+It is installed from the Home Assistant Marketplace (Home Assistant
+2026.11 or later), and is
 set up via the Home Assistant UI (Settings -> Devices & Services -> Add
 Integration). Existing YAML configuration is automatically imported.
 

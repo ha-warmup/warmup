@@ -3,7 +3,8 @@
 This software is a Custom Component to integrate 
 Warmup under-floor heating devices into 
 [Home Assistant](https://www.home-assistant.io/). 
-It is compatible with the Home Assistant Community Store (HACS).
+It can be installed from the Home Assistant Marketplace
+(Home Assistant 2026.11 or later).
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 
@@ -18,7 +19,7 @@ and allows Home Assistant to read and control the supported devices,
 using a python script to perform the integration. 
 
 You may install this integration from the 
-Home Assistant Community Store (HACS), 
+Home Assistant Marketplace, 
 or continue reading below for instructions 
 on the **manual installation** of this component.
 
@@ -39,15 +40,23 @@ you need to register for a Warmup account.
 See <https://my.warmup.com/login>
 
 
-## Home Assistant Community Store
+## Home Assistant Marketplace
 
-If you have HACS installed, then use this button
+This integration requires Home Assistant 2026.11 or later.
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-warmup&repository=warmup&category=integration)
+In Home Assistant, go to **Settings -> Marketplace**, search for
+`warmup` and install **Warmup under-floor heating integration**.
+Restart Home Assistant when the Marketplace asks you to, then add the
+integration as described under [Configuration](#configuration).
 
-Alternatively Explore HACS Repositories and search for `warmup`
+If Warmup isn't listed in the catalog yet, use **Add from link** in the
+Marketplace with this repository's URL,
+<https://github.com/ha-warmup/warmup>.
 
-See more detailed instuctions on [installing `warmup` in HACS](docs/install-in-HACS.md)
+### Older Home Assistant versions
+
+On Home Assistant versions before 2026.11, install an earlier release
+(2026.10.25 or before) with the Home Assistant Community Store (HACS). See [installing `warmup` in HACS](docs/install-in-HACS.md).
 
 
 ## Manual installation

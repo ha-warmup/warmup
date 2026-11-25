@@ -16,11 +16,7 @@ Recent features from development that have not been formally released yet:
 
 ### Added
 
-* UI config flow: the integration can now be set up and reconfigured from Settings -> Devices & Services, instead of only via YAML
-* Reauthentication flow: Home Assistant now prompts to update the password on the existing entry if login starts failing, instead of silently breaking
-* Automatic import of existing `climate: - platform: warmup` YAML configuration into a config entry, with a repair issue pointing at the YAML that should be removed
 * A device for each thermostat, named after its room, with model, serial number and firmware version; each climate entity belongs to its device, so it can be given an area through the device
-* Brand icon and logo shipped in `custom_components/warmup/brand/`, so the Marketplace and integration pages show them
 
 ### Changed
 
@@ -28,6 +24,23 @@ Recent features from development that have not been formally released yet:
 * All thermostats on an account are updated with one request per minute, and become unavailable when the update fails or Warmup reports them unavailable, instead of showing stale values
 * Thermostats show their real mode and preset straight after Home Assistant starts, and update straight after a command
 * If Warmup rejects an update the integration logs in again, and asks you to reauthenticate if that fails
+
+### Documented
+
+* `LICENSE` is now the plain-text Apache 2.0 licence (was `LICENSE.md`), so GitHub and HACS validation recognise it
+
+
+## 2026.11.25 release
+
+### Added
+
+* UI config flow: the integration can now be set up and reconfigured from Settings -> Devices & Services, instead of only via YAML
+* Reauthentication flow: Home Assistant now prompts to update the password on the existing entry if login starts failing, instead of silently breaking
+* Automatic import of existing `climate: - platform: warmup` YAML configuration into a config entry, with a repair issue pointing at the YAML that should be removed
+* Brand icon and logo shipped in `custom_components/warmup/brand/`, so the Marketplace and integration pages show them
+
+### Changed
+
 * Requires Home Assistant 2026.11 or later
 * The climate entity uses the `native_` temperature properties, fixing the `temperature_unit` deprecation warning logged since Home Assistant 2026.11 (#96)
 * `entity_unique_id`s and `entity_id`s of existing YAML-created `warmup.*` entities are preserved across the migration to config entries
@@ -35,13 +48,19 @@ Recent features from development that have not been formally released yet:
 
 ### Documented
 
-* `LICENSE` is now the plain-text Apache 2.0 licence (was `LICENSE.md`), so GitHub and HACS validation recognise it
 * README and info.md updated to describe UI-based setup and the YAML migration path
 * Installation instructions now use the Home Assistant Marketplace; HACS instructions are kept for Home Assistant versions before 2026.11
 
 ### Deprecated
 
 * Configuring Warmup via `climate:` in `configuration.yaml` is deprecated; it is auto-imported, but should be removed once imported
+
+
+## 2026.10.31 release
+
+### Changed
+
+* The climate entity's action is inferred from the current and target temperatures: it shows heating only when the current temperature is at or below the target, instead of whenever the thermostat is on (#94)
 
 
 ## 2026.10.25 release

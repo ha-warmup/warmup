@@ -1,6 +1,7 @@
 {
   "domain": "warmup",
   "name": "Warmup",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@ha-warmup"],
   "config_flow": true,
   "dependencies": [],

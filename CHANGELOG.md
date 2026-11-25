@@ -23,6 +23,7 @@ Recent features from development that have not been formally released yet:
 
 ### Changed
 
+* Integration manifest declares the `climate.thermostats_heating` category
 * Requires Home Assistant 2026.11 or later
 * The climate entity uses the `native_` temperature properties, fixing the `temperature_unit` deprecation warning logged since Home Assistant 2026.11 (#96)
 * `entity_unique_id`s and `entity_id`s of existing YAML-created `warmup.*` entities are preserved across the migration to config entries
@@ -30,6 +31,7 @@ Recent features from development that have not been formally released yet:
 
 ### Documented
 
+* `LICENSE` is now the plain-text Apache 2.0 licence (was `LICENSE.md`), so GitHub and HACS validation recognise it
 * README and info.md updated to describe UI-based setup and the YAML migration path
 * Installation instructions now use the Home Assistant Marketplace; HACS instructions are kept for Home Assistant versions before 2026.11
 

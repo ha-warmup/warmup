@@ -26,7 +26,7 @@ on the **manual installation** of this component.
 
 ## License
 
-This software is published under Apache 2.0 license. Please see LICENSE.md.
+This software is published under Apache 2.0 license. Please see LICENSE.
 
 # Usage
 

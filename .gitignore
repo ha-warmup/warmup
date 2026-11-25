@@ -4,3 +4,4 @@
 warmup4ie-PyPi/warmup4ie/__pycache__/
 __pycache__/
 .pytest_cache/
+.venv/

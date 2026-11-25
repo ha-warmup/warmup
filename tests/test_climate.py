@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfTemperature
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -112,3 +112,33 @@ async def test_yaml_setup_platform_idempotent_still_raises_issue(hass):
     issue_registry = ir.async_get(hass)
     issue_id = f"yaml_deprecated_{TEST_USERNAME.lower()}"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+
+async def test_entity_uses_native_temperature_api(hass, caplog):
+    """Temperatures are exposed via the native_* API, with no deprecation warning."""
+    device = make_device(serial="AAA111", room_name="Kitchen")
+    device.current_temperature = 19.5
+    device.target_temperature = 21.0
+    FakeWarmup4IE.devices = [device]
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_USERNAME.lower(),
+        data={CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "climate", DOMAIN, "warmup_AAA111"
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes["current_temperature"] == 19.5
+    assert state.attributes["temperature"] == 21.0
+    assert state.attributes["temperature_unit"] == UnitOfTemperature.CELSIUS
+    # The deprecation warning is logged when climate.py is imported, which can
+    # happen while fixtures are being set up.
+    records = caplog.get_records("setup") + caplog.get_records("call")
+    assert not [r for r in records if "provides the deprecated" in r.getMessage()]

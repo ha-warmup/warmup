@@ -247,6 +247,7 @@ class Warmup4IE:
                 "overrideDur "
                 "roomModeInt "
                 "sleepTemp "
+                "isUnavailable "
                 "targetTemp "
                 "thermostat4ies {"
                 "id "
@@ -440,6 +441,7 @@ class Warmup4IEDevice:
         self.run_mode = None
         self.room_mode = None
         self.heating_target = None
+        self.is_unavailable = False
 
     def get_run_mode(self):
         """return current mode, e.g. 'off', 'fixed', 'prog'."""
@@ -467,6 +469,7 @@ class Warmup4IEDevice:
         self.run_mode = RUN_MODE.get(room['runModeInt'], None)
         self.room_mode = ROOM_MODE.get(room['roomModeInt'], None)
         self.heating_target = HEATING_TARGET.get(thermostat['heatingTargetInt'], None)
+        self.is_unavailable = bool(room.get('isUnavailable'))
 
     def get_target_temperature(self):
         """return target temperature"""

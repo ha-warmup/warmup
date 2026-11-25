@@ -21,10 +21,16 @@ def reset_fake_warmup4ie():
     FakeWarmup4IE.login_should_succeed = True
     FakeWarmup4IE.raise_connection_error = False
     FakeWarmup4IE.devices = []
+    FakeWarmup4IE.rejected_updates = 0
+    FakeWarmup4IE.relogin_should_succeed = True
+    FakeWarmup4IE.relogin_count = 0
     yield
     FakeWarmup4IE.login_should_succeed = True
     FakeWarmup4IE.raise_connection_error = False
     FakeWarmup4IE.devices = []
+    FakeWarmup4IE.rejected_updates = 0
+    FakeWarmup4IE.relogin_should_succeed = True
+    FakeWarmup4IE.relogin_count = 0
 
 
 @pytest.fixture(autouse=True)

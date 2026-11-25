@@ -56,7 +56,7 @@ Marketplace with this repository's URL,
 ### Older Home Assistant versions
 
 On Home Assistant versions before 2026.11, install an earlier release
-(2026.10.25 or before) with the Home Assistant Community Store (HACS). See [installing `warmup` in HACS](docs/install-in-HACS.md).
+(2026.10.31 or before) with the Home Assistant Community Store (HACS). See [installing `warmup` in HACS](docs/install-in-HACS.md).
 
 
 ## Manual installation

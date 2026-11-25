@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform, issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -144,6 +145,8 @@ async def async_setup_entry(
 class WarmupThermostat(CoordinatorEntity[WarmupCoordinator], ClimateEntity):
     """Representation of a Warmup thermostat."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_hvac_modes = SUPPORT_HVAC_HEAT
     _attr_preset_modes = SUPPORT_PRESET
     _attr_supported_features = SUPPORT_FLAGS
@@ -155,6 +158,15 @@ class WarmupThermostat(CoordinatorEntity[WarmupCoordinator], ClimateEntity):
         super().__init__(coordinator)
         self._serial = serial
         self._attr_unique_id = "warmup_" + serial
+        device = self._device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial)},
+            manufacturer="Warmup",
+            model=device.model.upper() if device.model else None,
+            name=device.get_room_name(),
+            serial_number=serial,
+            sw_version=device.firmware_version,
+        )
 
     @property
     def _device(self) -> Warmup4IEDevice:
@@ -169,11 +181,6 @@ class WarmupThermostat(CoordinatorEntity[WarmupCoordinator], ClimateEntity):
             and self._serial in self.coordinator.data
             and not self._device.is_unavailable
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the climate device."""
-        return self._device.get_room_name()
 
     @property
     def _is_off(self) -> bool:

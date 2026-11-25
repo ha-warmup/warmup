@@ -252,6 +252,8 @@ class Warmup4IE:
                 "thermostat4ies {"
                 "id "
                 "deviceSN "
+                "type "
+                "appFw "
                 "minTemp "
                 "maxTemp "
                 "airTemp "
@@ -442,6 +444,8 @@ class Warmup4IEDevice:
         self.room_mode = None
         self.heating_target = None
         self.is_unavailable = False
+        self.model = None
+        self.firmware_version = None
 
     def get_run_mode(self):
         """return current mode, e.g. 'off', 'fixed', 'prog'."""
@@ -470,6 +474,8 @@ class Warmup4IEDevice:
         self.room_mode = ROOM_MODE.get(room['roomModeInt'], None)
         self.heating_target = HEATING_TARGET.get(thermostat['heatingTargetInt'], None)
         self.is_unavailable = bool(room.get('isUnavailable'))
+        self.model = thermostat.get('type')
+        self.firmware_version = thermostat.get('appFw')
 
     def get_target_temperature(self):
         """return target temperature"""

@@ -1,22 +1,20 @@
 """Platform that offers a connection to a warmup device."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from collections.abc import Callable
 from typing import Any
-
-import voluptuous as vol
-from .warmup4ie import Warmup4IEDevice
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
-    HVACAction,
-    HVACMode,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_HOME,
     ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -27,18 +25,19 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import InvalidStateError
 from homeassistant.helpers import entity_platform, issue_registry as ir
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from homeassistant.exceptions import InvalidStateError
-import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 
 from . import WarmupConfigEntry
 from .const import DOMAIN
 from .coordinator import WarmupCoordinator
+from .warmup4ie import Warmup4IEDevice
 
 """ temperature utility will stop working in HA 2023.4. Removed it for now, as CELCIUS is the only temperature standard this module supports anyway. """
 # from homeassistant.util.temperature import convert as convert_temperature
@@ -67,7 +66,12 @@ HVAC_MAP_WARMUP_HEAT = {
     CONST_MODE_OFF: HVACMode.OFF,
 }
 
-SUPPORT_FLAGS = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TURN_ON |ClimateEntityFeature.TURN_OFF
+SUPPORT_FLAGS = (
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.TURN_ON
+    | ClimateEntityFeature.TURN_OFF
+)
 SUPPORT_HVAC_HEAT = [HVACMode.HEAT, HVACMode.AUTO, HVACMode.OFF]
 SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME, PRESET_BOOST]
 
@@ -85,6 +89,7 @@ SERVICE_SET_OVERRIDE_SCHEMA = {
     vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
     vol.Optional(ATTR_UNTIL): cv.string,
 }
+
 
 async def async_setup_platform(
     hass: HomeAssistant,

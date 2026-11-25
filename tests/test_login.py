@@ -4,15 +4,21 @@ Imports the warmup4ie module directly by file path so that importing it
 does not pull in the `custom_components.warmup` package (which depends on
 `homeassistant`).
 """
+
 import importlib.util
 import os
 import sys
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 MODULE_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "custom_components", "warmup", "warmup4ie", "warmup4ie.py"
+    os.path.dirname(__file__),
+    "..",
+    "custom_components",
+    "warmup",
+    "warmup4ie",
+    "warmup4ie.py",
 )
 
 
@@ -50,7 +56,8 @@ class TestV2LoginSuccess:
     @patch("warmup4ie_under_test.requests.post")
     def test_v2_login_success_parses_token_and_sends_right_request(self, mock_post):
         mock_post.return_value = _make_response(
-            200, {"status": "success", "response": {"token": "tok-123", "mobileName": "x"}}
+            200,
+            {"status": "success", "response": {"token": "tok-123", "mobileName": "x"}},
         )
         client = _new_client_without_connect()
 
@@ -83,7 +90,9 @@ class TestV2LoginSuccess:
 class TestV2LoginWrongCredentials:
     @pytest.mark.parametrize("status_code", [401, 403])
     @patch("warmup4ie_under_test.requests.post")
-    def test_wrong_credentials_returns_false_without_v1_fallback(self, mock_post, status_code):
+    def test_wrong_credentials_returns_false_without_v1_fallback(
+        self, mock_post, status_code
+    ):
         mock_post.return_value = _make_response(status_code, {"status": "error"})
         client = _new_client_without_connect()
 
@@ -100,7 +109,9 @@ class TestV2LoginWrongCredentials:
 class TestV2FallbackToV1:
     @pytest.mark.parametrize("status_code", [404, 500, 502])
     @patch("warmup4ie_under_test.requests.post")
-    def test_v2_error_falls_back_to_v1_and_v1_success_works(self, mock_post, status_code):
+    def test_v2_error_falls_back_to_v1_and_v1_success_works(
+        self, mock_post, status_code
+    ):
         v2_response = _make_response(status_code, {})
         v1_response = _make_response(
             200, {"status": {"result": "success"}, "response": {"token": "v1-tok"}}

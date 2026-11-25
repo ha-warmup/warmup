@@ -5,11 +5,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import requests
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+import requests
+import voluptuous as vol
 
 from .const import DOMAIN
 from .warmup4ie import Warmup4IE
@@ -44,9 +43,7 @@ class WarmupConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _async_try_login(
-        self, username: str, password: str
-    ) -> dict[str, str]:
+    async def _async_try_login(self, username: str, password: str) -> dict[str, str]:
         """Attempt a login and return a dict of errors (empty if none)."""
         errors: dict[str, str] = {}
         try:
@@ -112,9 +109,7 @@ class WarmupConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(
-        self, entry_data: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a reauthentication flow."""
         return await self.async_step_reauth_confirm()
 

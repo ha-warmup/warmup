@@ -26,58 +26,58 @@ climate:
 #       - commands for setting/retrieving programmed times missing
 """
 
-import logging
-import requests
 from collections import namedtuple
+import logging
+
+import requests
 
 _LOGGER = logging.getLogger(__name__)
 
-RUN_MODE = {0: 'off',
-            1: 'prog',
-            2: 'override',
-            3: 'fixed',
-            4: 'frost',
-            5: 'away',
-            6: 'flip',
-            7: 'grad',
-            8: 'relay'}
-ROOM_MODE = {1: 'prog',
-             3: 'fixed'}
-HEATING_TARGET = {
-    0: 'floor',
-    1: 'air'
+RUN_MODE = {
+    0: "off",
+    1: "prog",
+    2: "override",
+    3: "fixed",
+    4: "frost",
+    5: "away",
+    6: "flip",
+    7: "grad",
+    8: "relay",
 }
+ROOM_MODE = {1: "prog", 3: "fixed"}
+HEATING_TARGET = {0: "floor", 1: "air"}
 
 
 class Warmup4IE:
-    TOKEN_URL = 'https://api.warmup.com/apps/app/v1'
-    LOGIN_URL = 'https://apil.warmup.com/login'
-    URL = 'https://apil.warmup.com/graphql'
+    TOKEN_URL = "https://api.warmup.com/apps/app/v1"
+    LOGIN_URL = "https://apil.warmup.com/login"
+    URL = "https://apil.warmup.com/graphql"
     # Same token the current Warmup Android app ships, used as both the V1
     # "APP-Token" and the V2 "API-Token".
-    APP_TOKEN = \
-        'HIBc*vAPbvc6gtL6xYvQNxjLW8nscZ72K,4k6ioUxo3dyAsd1QoCe96-\'O3qy5Ai'
-    APP_ID = 'WARMUP-APP-V001'
-    COMMON_HEADER = {'accept-encoding': 'br, gzip, deflate',
-                      'accept': '*/*',
-                      'Connection': 'keep-alive',
-                      'content-type': 'application/json',
-                      'app-version': '1.9.12',
-                      'accept-language': 'de-de'}
+    APP_TOKEN = "HIBc*vAPbvc6gtL6xYvQNxjLW8nscZ72K,4k6ioUxo3dyAsd1QoCe96-'O3qy5Ai"
+    APP_ID = "WARMUP-APP-V001"
+    COMMON_HEADER = {
+        "accept-encoding": "br, gzip, deflate",
+        "accept": "*/*",
+        "Connection": "keep-alive",
+        "content-type": "application/json",
+        "app-version": "1.9.12",
+        "accept-language": "de-de",
+    }
 
     def _v1_headers(self):
         """Headers for api.warmup.com/apps/app/v1 calls."""
         headers = self.COMMON_HEADER.copy()
-        headers['user-agent'] = 'WARMUP_APP'
-        headers['app-token'] = self.APP_TOKEN
+        headers["user-agent"] = "WARMUP_APP"
+        headers["app-token"] = self.APP_TOKEN
         return headers
 
     def _v2_headers(self):
         """Headers for apil.warmup.com calls (login, graphql)."""
         headers = self.COMMON_HEADER.copy()
-        headers['user-agent'] = 'WARMUP_API'
-        headers['api-token'] = self.APP_TOKEN
-        headers['warmup-authorization'] = str(self._warmup_access_token or '')
+        headers["user-agent"] = "WARMUP_API"
+        headers["api-token"] = self.APP_TOKEN
+        headers["warmup-authorization"] = str(self._warmup_access_token or "")
         return headers
 
     def __init__(self, user, password):
@@ -115,14 +115,16 @@ class Warmup4IE:
         failure (do not fall back to V1), or None if the V2 endpoint itself
         failed to answer sensibly (caller should fall back to V1).
         """
-        body = {'email': self._user,
-                'password': self._password,
-                'appId': self.APP_ID}
+        body = {"email": self._user, "password": self._password, "appId": self.APP_ID}
 
         try:
-            response = requests.post(url=self.LOGIN_URL, headers=self._v2_headers(), json=body)
+            response = requests.post(
+                url=self.LOGIN_URL, headers=self._v2_headers(), json=body
+            )
         except requests.RequestException as err:
-            _LOGGER.warning("V2 login request failed (%s), falling back to V1 login", err)
+            _LOGGER.warning(
+                "V2 login request failed (%s), falling back to V1 login", err
+            )
             return None
 
         if response.status_code in (401, 403):
@@ -131,15 +133,18 @@ class Warmup4IE:
 
         if response.status_code != 200:
             _LOGGER.warning(
-                "V2 login returned status %s, falling back to V1 login", response.status_code)
+                "V2 login returned status %s, falling back to V1 login",
+                response.status_code,
+            )
             return None
 
         try:
-            token = response.json()['response']['token']
-        except (ValueError, KeyError, TypeError):
+            token = response.json()["response"]["token"]
+        except ValueError, KeyError, TypeError:
             _LOGGER.warning(
                 "V2 login response had an unexpected shape, falling back to V1 login: %s",
-                response.text)
+                response.text,
+            )
             return None
 
         self._warmup_access_token = token
@@ -147,21 +152,27 @@ class Warmup4IE:
 
     def _login_v1(self):
         """Fall back to the legacy V1 login endpoint."""
-        body = {'request':
-                    {'email': self._user,
-                     'password': self._password,
-                     'method': 'userLogin',
-                     'appId': self.APP_ID}
-                }
+        body = {
+            "request": {
+                "email": self._user,
+                "password": self._password,
+                "method": "userLogin",
+                "appId": self.APP_ID,
+            }
+        }
 
-        response = requests.post(url=self.TOKEN_URL, headers=self._v1_headers(), json=body)
+        response = requests.post(
+            url=self.TOKEN_URL, headers=self._v1_headers(), json=body
+        )
         # check if request was accepted and if request was successful
-        if response.status_code != 200 or \
-                response.json()['status']['result'] != 'success':
+        if (
+            response.status_code != 200
+            or response.json()["status"]["result"] != "success"
+        ):
             _LOGGER.error("generating AccessToken failed, %s", response)
             return False
         # extract and store access token for later use
-        self._warmup_access_token = response.json()['response']['token']
+        self._warmup_access_token = response.json()["response"]["token"]
         return True
 
     def get_locations(self):
@@ -170,22 +181,21 @@ class Warmup4IE:
             _LOGGER.error("Access token is not set. Try calling connect first")
             return None
         body = {
-            "account": {
-                "email": self._user,
-                "token": self._warmup_access_token
-            },
-            "request": {
-                "method": "getLocations"
-            }
+            "account": {"email": self._user, "token": self._warmup_access_token},
+            "request": {"method": "getLocations"},
         }
-        response = requests.post(url=self.TOKEN_URL, headers=self._v1_headers(), json=body)
+        response = requests.post(
+            url=self.TOKEN_URL, headers=self._v1_headers(), json=body
+        )
         # check if request was accepted and if request was successful
-        if response.status_code != 200 or \
-                response.json()['status']['result'] != 'success':
+        if (
+            response.status_code != 200
+            or response.json()["status"]["result"] != "success"
+        ):
             _LOGGER.error("initialising failed, %s", response)
             return None
         # extract and store locationId for later use
-        locations = response.json()['response']['locations']
+        locations = response.json()["response"]["locations"]
         return locations
 
     def get_all_devices(self):
@@ -226,66 +236,68 @@ class Warmup4IE:
             return None
 
         body = {
-            "query":
-                "query QUERY{ "
-                "user{ "
-                "allLocations: locations { "
-                "id "
-                "name "
-                "rooms{ "
-                "id "
-                "roomName "
-                "runModeInt "
-                "targetTemp "
-                "currentTemp "
-                "awayTemp "
-                "comfortTemp "
-                "cost "
-                "energy "
-                "fixedTemp "
-                "overrideTemp "
-                "overrideDur "
-                "roomModeInt "
-                "sleepTemp "
-                "isUnavailable "
-                "targetTemp "
-                "thermostat4ies {"
-                "id "
-                "deviceSN "
-                "type "
-                "appFw "
-                "minTemp "
-                "maxTemp "
-                "airTemp "
-                "floor1Temp "
-                "floor2Temp "
-                "heatingTargetInt"
-                "}"
-                "}  "
-                "}"
-                "}  "
-                "} "
+            "query": "query QUERY{ "
+            "user{ "
+            "allLocations: locations { "
+            "id "
+            "name "
+            "rooms{ "
+            "id "
+            "roomName "
+            "runModeInt "
+            "targetTemp "
+            "currentTemp "
+            "awayTemp "
+            "comfortTemp "
+            "cost "
+            "energy "
+            "fixedTemp "
+            "overrideTemp "
+            "overrideDur "
+            "roomModeInt "
+            "sleepTemp "
+            "isUnavailable "
+            "targetTemp "
+            "thermostat4ies {"
+            "id "
+            "deviceSN "
+            "type "
+            "appFw "
+            "minTemp "
+            "maxTemp "
+            "airTemp "
+            "floor1Temp "
+            "floor2Temp "
+            "heatingTargetInt"
+            "}"
+            "}  "
+            "}"
+            "}  "
+            "} "
         }
         response = requests.post(url=self.URL, headers=self._v2_headers(), json=body)
         # check if request was accepted and if request was successful
-        if response.status_code != 200 or \
-                response.json()['status'] != 'success':
+        if response.status_code != 200 or response.json()["status"] != "success":
             _LOGGER.error("updating new room failed, %s", response)
             return None
         # extract and store all devices
-        device = namedtuple('Device', 'location_id room_id thermostat_id')
-        locations = response.json()['data']['user']['allLocations']
+        device = namedtuple("Device", "location_id room_id thermostat_id")
+        locations = response.json()["data"]["user"]["allLocations"]
 
         for location in locations:
             self._locations[location["id"]] = location["name"]
-            for room in location['rooms']:
+            for room in location["rooms"]:
                 self._rooms[room["id"]] = room["roomName"]
-                for thermostat in room['thermostat4ies']:
+                for thermostat in room["thermostat4ies"]:
                     key = device(location["id"], room["id"], thermostat["id"])
                     device_to_update = self._all_devices.get(key, None)
                     if device_to_update is None:
-                        _LOGGER.info("Found thermostat with SN %s, name %s in location %s ",
-                                      thermostat["deviceSN"], room["roomName"], location["name"])
+                        _LOGGER.info(
+                            "Found thermostat with SN %s, name %s in location %s ",
+                            thermostat["deviceSN"],
+                            room["roomName"],
+                            location["name"],
+                        )
                         device_to_update = Warmup4IEDevice(
                             location["id"],
                             location["name"],
@@ -293,7 +305,8 @@ class Warmup4IE:
                             room["roomName"],
                             thermostat["id"],
                             thermostat["deviceSN"],
-                            self)
+                            self,
+                        )
                         self._all_devices[key] = device_to_update
                     device_to_update.update_room(room, thermostat)
         return self._all_devices
@@ -302,28 +315,29 @@ class Warmup4IE:
         if self._warmup_access_token is None:
             return
         body = {
-            "account": {
-                "email": self._user,
-                "token": self._warmup_access_token
-            },
+            "account": {"email": self._user, "token": self._warmup_access_token},
             "request": {
                 "method": "setOverride",
                 "rooms": [room_id],
-                "temp": "{:03d}".format(int(temperature * 10)),
+                "temp": f"{int(temperature * 10):03d}",
                 "until": until,
-                "type": 3
-            }
+                "type": 3,
+            },
         }
 
-        response = requests.post(url=self.TOKEN_URL, headers=self._v1_headers(), json=body)
+        response = requests.post(
+            url=self.TOKEN_URL, headers=self._v1_headers(), json=body
+        )
         # check if request was accepted and if request was successful
-        if response.status_code != 200 or \
-                response.json()['status']['result'] != 'success':
-            _LOGGER.error(
-                "Setting override failed, %s", response)
+        if (
+            response.status_code != 200
+            or response.json()["status"]["result"] != "success"
+        ):
+            _LOGGER.error("Setting override failed, %s", response)
             return None
-        _LOGGER.info("Successfully set override, "
-                     "response from server: '%s'", response.text)
+        _LOGGER.info(
+            "Successfully set override, response from server: '%s'", response.text
+        )
         self.update_all_devices()
 
     def _set_location_mode(self, location_id, location_mode):
@@ -332,10 +346,7 @@ class Warmup4IE:
         if self._warmup_access_token is None:
             return
         body = {
-            "account": {
-                "email": self._user,
-                "token": self._warmup_access_token
-            },
+            "account": {"email": self._user, "token": self._warmup_access_token},
             "request": {
                 "method": "setModes",
                 "values": {
@@ -345,19 +356,27 @@ class Warmup4IE:
                     "geoMode": "0",
                     "holTemp": "-",
                     "locId": location_id,
-                    "locMode": location_mode
-                }
-            }
+                    "locMode": location_mode,
+                },
+            },
         }
-        response = requests.post(url=self.TOKEN_URL, headers=self._v1_headers(), json=body)
+        response = requests.post(
+            url=self.TOKEN_URL, headers=self._v1_headers(), json=body
+        )
         # check if request was accepted and if request was successful
-        if response.status_code != 200 or \
-                response.json()['status']['result'] != 'success':
+        if (
+            response.status_code != 200
+            or response.json()["status"]["result"] != "success"
+        ):
             _LOGGER.error(
-                "Setting location mode to %s failed, %s", location_mode, response)
+                "Setting location mode to %s failed, %s", location_mode, response
+            )
             return
-        _LOGGER.info("Successfully set location mode to %s, response "
-                     "from server: '%s'", location_mode, response.text)
+        _LOGGER.info(
+            "Successfully set location mode to %s, response from server: '%s'",
+            location_mode,
+            response.text,
+        )
         self.update_all_devices()
 
     def _set_temperature(self, room_id, mode, temperature=None):
@@ -365,29 +384,37 @@ class Warmup4IE:
         if self._warmup_access_token is None:
             return
         body = {
-            "account": {
-                "email": self._user,
-                "token": self._warmup_access_token
-            },
-            "request": {
-                "method": "setProgramme",
-                "roomId": room_id,
-                "roomMode": mode
-            }
+            "account": {"email": self._user, "token": self._warmup_access_token},
+            "request": {"method": "setProgramme", "roomId": room_id, "roomMode": mode},
         }
 
         if temperature is not None:
-            body["request"]["fixed"] = {"fixedTemp": "{:03d}".format(int(temperature * 10))}
+            body["request"]["fixed"] = {"fixedTemp": f"{int(temperature * 10):03d}"}
 
-        response = requests.post(url=self.TOKEN_URL, headers=self._v1_headers(), json=body)
+        response = requests.post(
+            url=self.TOKEN_URL, headers=self._v1_headers(), json=body
+        )
         # check if request was accepted and if request was successful
-        if response.status_code != 200 or \
-                response.json()['status']['result'] != 'success':
+        if (
+            response.status_code != 200
+            or response.json()["status"]["result"] != "success"
+        ):
             _LOGGER.error(
-                "Setting room %s - mode to %s, temperature to %s failed, %s", room_id, mode, temperature, response)
+                "Setting room %s - mode to %s, temperature to %s failed, %s",
+                room_id,
+                mode,
+                temperature,
+                response,
+            )
             return None
-        _LOGGER.info("Successfully set room %s - mode to %s, temperature to %s "
-                     "response from server: '%s'", room_id, mode, temperature, response.text)
+        _LOGGER.info(
+            "Successfully set room %s - mode to %s, temperature to %s "
+            "response from server: '%s'",
+            room_id,
+            mode,
+            temperature,
+            response.text,
+        )
         self.update_all_devices()
 
     def set_location_to_frost(self, location_id):
@@ -414,7 +441,16 @@ class Warmup4IEDevice:
     """
 
     # pylint: disable-msg=too-many-arguments
-    def __init__(self, location_id, location_name, room_id, room_name, device_id, serial_number, warmup4ie_account):
+    def __init__(
+        self,
+        location_id,
+        location_name,
+        room_id,
+        room_name,
+        device_id,
+        serial_number,
+        warmup4ie_account,
+    ):
         """Initialize the climate device."""
         _LOGGER.info("Setting up Warmup4IE component")
         self._location_name = location_name
@@ -452,30 +488,28 @@ class Warmup4IEDevice:
         return self.run_mode
 
     def update_room(self, room, thermostat):
-        """Update room/device data for the given room name.
-
-        """
-        self.target_temperature = int(room['targetTemp']) / 10
-        self.current_temperature = int(room['currentTemp']) / 10
-        self.min_temp = int(thermostat['minTemp']) / 10
-        self.max_temp = int(thermostat['maxTemp']) / 10
-        self.floor_temperature = int(thermostat['floor1Temp']) / 10
-        self.floor_temperature_2 = int(thermostat['floor2Temp']) / 10
-        self.air_temperature = int(thermostat['airTemp']) / 10
-        self.away_temperature = int(room['awayTemp']) / 10
-        self.comfort_temperature = int(room['comfortTemp']) / 10
-        self.cost = room['cost']
-        self.energy = room['energy']
-        self.fixed_temperature = int(room['fixedTemp']) / 10
-        self.override_temperature = int(room['overrideTemp']) / 10
-        self.override_duration_mins = int(room['overrideDur'])
-        self.sleep_temperature = int(room['sleepTemp']) / 10
-        self.run_mode = RUN_MODE.get(room['runModeInt'], None)
-        self.room_mode = ROOM_MODE.get(room['roomModeInt'], None)
-        self.heating_target = HEATING_TARGET.get(thermostat['heatingTargetInt'], None)
-        self.is_unavailable = bool(room.get('isUnavailable'))
-        self.model = thermostat.get('type')
-        self.firmware_version = thermostat.get('appFw')
+        """Update room/device data for the given room name."""
+        self.target_temperature = int(room["targetTemp"]) / 10
+        self.current_temperature = int(room["currentTemp"]) / 10
+        self.min_temp = int(thermostat["minTemp"]) / 10
+        self.max_temp = int(thermostat["maxTemp"]) / 10
+        self.floor_temperature = int(thermostat["floor1Temp"]) / 10
+        self.floor_temperature_2 = int(thermostat["floor2Temp"]) / 10
+        self.air_temperature = int(thermostat["airTemp"]) / 10
+        self.away_temperature = int(room["awayTemp"]) / 10
+        self.comfort_temperature = int(room["comfortTemp"]) / 10
+        self.cost = room["cost"]
+        self.energy = room["energy"]
+        self.fixed_temperature = int(room["fixedTemp"]) / 10
+        self.override_temperature = int(room["overrideTemp"]) / 10
+        self.override_duration_mins = int(room["overrideDur"])
+        self.sleep_temperature = int(room["sleepTemp"]) / 10
+        self.run_mode = RUN_MODE.get(room["runModeInt"], None)
+        self.room_mode = ROOM_MODE.get(room["roomModeInt"], None)
+        self.heating_target = HEATING_TARGET.get(thermostat["heatingTargetInt"], None)
+        self.is_unavailable = bool(room.get("isUnavailable"))
+        self.model = thermostat.get("type")
+        self.firmware_version = thermostat.get("appFw")
 
     def get_target_temperature(self):
         """return target temperature"""
@@ -563,30 +597,41 @@ class Warmup4IEDevice:
 
     def set_new_temperature(self, new_temperature):
         """set new target temperature"""
-        returned_temp = self._warmup4ie_account.set_new_temperature(self._room_id, new_temperature)
+        returned_temp = self._warmup4ie_account.set_new_temperature(
+            self._room_id, new_temperature
+        )
         if new_temperature != returned_temp:
-            _LOGGER.info("Server declined to set new target temperature "
-                         "to %.1f°C", new_temperature)
+            _LOGGER.info(
+                "Server declined to set new target temperature to %.1f°C",
+                new_temperature,
+            )
             return
         self.target_temperature = returned_temp
-        _LOGGER.info("Successfully set new target temperature to %.1f°C",
-                     self.target_temperature)
+        _LOGGER.info(
+            "Successfully set new target temperature to %.1f°C", self.target_temperature
+        )
 
     def set_temperature_to_auto(self):
         """set device to automatic mode"""
-        self.target_temperature = self._warmup4ie_account.set_temperature_to_auto(self._room_id)
+        self.target_temperature = self._warmup4ie_account.set_temperature_to_auto(
+            self._room_id
+        )
 
     def set_temperature_to_manual(self):
         """set device to manual mode"""
-        self.target_temperature = self._warmup4ie_account.set_temperature_to_manual(self._room_id)
+        self.target_temperature = self._warmup4ie_account.set_temperature_to_manual(
+            self._room_id
+        )
 
     def set_location_to_frost(self):
         """set device to frost protection mode"""
         self._warmup4ie_account.set_location_to_frost(self._loc_id)
 
     def set_location_to_off(self):
-        """ turn off device"""
+        """turn off device"""
         self._warmup4ie_account.set_location_to_off(self._loc_id)
 
     def set_override(self, temperature, until):
-        self.override_duration_mins = self._warmup4ie_account.set_override(self._room_id, temperature, until)
+        self.override_duration_mins = self._warmup4ie_account.set_override(
+            self._room_id, temperature, until
+        )

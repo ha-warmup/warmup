@@ -6,11 +6,10 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-import requests
-
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+import requests
 
 from .const import DOMAIN
 from .warmup4ie import Warmup4IE, Warmup4IEDevice

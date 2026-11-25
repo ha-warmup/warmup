@@ -1,5 +1,9 @@
 # Installing warmup in HACS
 
+From Home Assistant 2026.11, HACS is replaced by the built-in Marketplace;
+see the [README](../README.md#home-assistant-marketplace). These instructions
+are for Home Assistant versions before 2026.11.
+
 This assumes you have already installed the Home Assistant Community Store following the instructions 
 
 https://hacs.xyz/docs/setup/prerequisites

@@ -3,7 +3,8 @@
 This software is a Custom Component to integrate 
 Warmup under-floor heating devices into 
 [Home Assistant](https://www.home-assistant.io/). 
-It is compatible with the Home Assistant Community Store (HACS).
+It can be installed from the Home Assistant Marketplace
+(Home Assistant 2026.11 or later).
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 
@@ -18,7 +19,7 @@ and allows Home Assistant to read and control the supported devices,
 using a python script to perform the integration. 
 
 You may install this integration from the 
-Home Assistant Community Store (HACS), 
+Home Assistant Marketplace, 
 or continue reading below for instructions 
 on the **manual installation** of this component.
 
@@ -39,15 +40,23 @@ you need to register for a Warmup account.
 See <https://my.warmup.com/login>
 
 
-## Home Assistant Community Store
+## Home Assistant Marketplace
 
-If you have HACS installed, then use this button
+This integration requires Home Assistant 2026.11 or later.
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-warmup&repository=warmup&category=integration)
+In Home Assistant, go to **Settings -> Marketplace**, search for
+`warmup` and install **Warmup under-floor heating integration**.
+Restart Home Assistant when the Marketplace asks you to, then add the
+integration as described under [Configuration](#configuration).
 
-Alternatively Explore HACS Repositories and search for `warmup`
+If Warmup isn't listed in the catalog yet, use **Add from link** in the
+Marketplace with this repository's URL,
+<https://github.com/ha-warmup/warmup>.
 
-See more detailed instuctions on [installing `warmup` in HACS](docs/install-in-HACS.md)
+### Older Home Assistant versions
+
+On Home Assistant versions before 2026.11, install an earlier release
+(2026.10.31 or before) with the Home Assistant Community Store (HACS). See [installing `warmup` in HACS](docs/install-in-HACS.md).
 
 
 ## Manual installation
@@ -102,9 +111,21 @@ the custom component has been successfully loaded. Great! - now carry on.
 
 ## Configuration
 
-### Add the warmup platform manually via YAML
+### Add the warmup integration via the UI
 
-Then add to your configuration.yaml:
+Once the custom component is installed, go to
+**Settings -> Devices & Services -> Add Integration**, search for
+**Warmup**, and enter the email address and password you use to log in to
+the My Warmup app or website.
+
+If your Warmup password changes later, Home Assistant will show a
+re-authentication prompt on the existing integration entry; you don't
+need to remove and re-add it.
+
+### Migrating from YAML configuration
+
+Older versions of this integration were configured directly in
+`configuration.yaml`:
 
 ```yaml
 climate:
@@ -113,14 +134,16 @@ climate:
     password: YOUR_PASSWORD
 ```
 
--   **username** (required): the username used to login to the warmup
-    web site
--   **password** (required): the password used to login to the warmup
-    web site; may be moved to the secrets.yaml file. See
-    [secrets](https://www.home-assistant.io/docs/configuration/secrets/)
+This style of configuration is **deprecated**. If it is still present in
+your `configuration.yaml`, Home Assistant automatically imports it into a
+config entry on startup (equivalent to adding it through the UI as above)
+and raises a repair issue asking you to remove the `climate:` block for
+that account. Your existing `warmup.*` entities keep the same
+`entity_id`s and history across this migration.
 
-After restarting home assistant, the component will be loaded
-automatically.
+Once you've removed the YAML and restarted Home Assistant, the
+integration continues to work exactly as before, managed entirely from
+**Settings -> Devices & Services**.
 
 #### Tip when changing config
 

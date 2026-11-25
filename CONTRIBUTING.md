@@ -91,22 +91,20 @@ In your OWN fork:
 Now the Actions tab should disappear from your fork, and the notifications will cease.
 
 ### Development practices
-    
-All development work should be done on branches created from the **dev** branch. 
-Please ensure you understand [the branching model we follow](https://nvie.com/posts/a-successful-git-branching-model/).
 
-Both of the above-linked guides also include command examples for you 
-to work on your local project repository. 
+`master` is the only long-lived branch. Create a branch from the latest `master` for each change, keep it rebased onto `master` while you work, and keep each pull request to one change.
 
 Please raise an issue if you want further guidance on developing new features or fixing issues.
 
 ### Pull Requests
 
-Once you have completed your development and testing on your changes, 
-then please raise a Pull Request for us to be able to merge in your work. They should be merged into the **`dev`** branch.
+Once you have completed your development and testing on your changes, raise a Pull Request against **`master`**. Add a line for your change under **Unreleased** in [CHANGELOG.md](CHANGELOG.md).
 
-You will see some validation actions launched as part of our HACS compliance. 
-If any of these actions fail, then your Pull Request might be held back.
+Every pull request runs these checks. If any of them fail, your Pull Request might be held back:
+
+* **Tests**: ruff lint and format, and the pytest suite (see below)
+* **Validate with hassfest** and **HACS validation**: Home Assistant and HACS repository checks
+* **Version check**: `manifest.json` must hold a version newer than the latest release (see [Versioning](#versioning))
 
 ### Tests and linting
 
@@ -123,9 +121,9 @@ Use `python -m pytest` rather than `pytest`, so that `tests.ha_compat` can be im
 
 ## Release
 
-We use GitHub Releases as good practice, both for a github repo, and for a [HACS integration](https://hacs.xyz/docs/publish/integration/#github-releases-optional). Once the changes applied in the dev branch have been sufficiently tested, then they can be bundled up for a release into the `master` branch,
+We use GitHub Releases, both for a GitHub repo and for a [HACS integration](https://hacs.xyz/docs/publish/integration/#github-releases-optional). Releases are made from `master` once the changes merged there have been tested.
 
-Before bringing changes into the **master** branch, please ensure that you have referenced the changes into [CHANGELOG.md](CHANGELOG.md) on dev. You could use `git log --oneline` to gather the info.
+Before releasing, move the entries under **Unreleased** in [CHANGELOG.md](CHANGELOG.md) into a section for the new version. You could use `git log --oneline` to gather the info.
 
 ### Versioning
 
@@ -139,9 +137,7 @@ custom_components/warmup/manifest.json
 
 The Marketplace and HACS read the version from `manifest.json` at the release tag, so bump it before you tag. CI enforces this: a pull request fails until `manifest.json` holds a version newer than the latest release, and publishing a release fails the "Version check" workflow if the tag (without its `v`) doesn't match `manifest.json`.
 
-You may find it convenient to tag your release candidate with the version. 
-When raising the PR from your origin/dev to the main project master, 
-remember to ask for a new Github Release to be created with the same tag.
+Create the GitHub Release from `master`, tagged `v` followed by the version in `manifest.json` (for example `v2026.11.26`).
 
 Please be clear if this is a Production release. 
 Otherwise, when the Release is created 

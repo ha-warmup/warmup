@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict
+from collections.abc import Callable
+from typing import Any
 
 import voluptuous as vol
-from .warmup4ie import Warmup4IE, Warmup4IEDevice
+from .warmup4ie import Warmup4IEDevice
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
@@ -29,13 +30,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from homeassistant.exceptions import InvalidStateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 
 from . import WarmupConfigEntry
 from .const import DOMAIN
+from .coordinator import WarmupCoordinator
 
 """ temperature utility will stop working in HA 2023.4. Removed it for now, as CELCIUS is the only temperature standard this module supports anyway. """
 # from homeassistant.util.temperature import convert as convert_temperature
@@ -83,9 +85,6 @@ SERVICE_SET_OVERRIDE_SCHEMA = {
     vol.Optional(ATTR_UNTIL): cv.string,
 }
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -128,272 +127,175 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Warmup climate entities from a config entry."""
-    warmup: Warmup4IE = entry.runtime_data
-    warmup_client = WarmupClient(warmup)
+    coordinator = entry.runtime_data
 
-    entities = [
-        WarmupThermostat(hass, device, warmup_client)
-        for device in warmup.get_all_devices().values()
-    ]
-    async_add_entities(entities)
+    async_add_entities(
+        WarmupThermostat(coordinator, serial) for serial in coordinator.data
+    )
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_OVERRIDE,
         SERVICE_SET_OVERRIDE_SCHEMA,
-        "set_override",
+        "async_set_override",
     )
 
 
-class WarmupClient:
-    """Wrapper around the API client to throttle requests."""
+class WarmupThermostat(CoordinatorEntity[WarmupCoordinator], ClimateEntity):
+    """Representation of a Warmup thermostat."""
 
-    def __init__(self, warmup: Warmup4IE):
-        """Initialise wrapper."""
-        self._warmup = warmup
+    _attr_hvac_modes = SUPPORT_HVAC_HEAT
+    _attr_preset_modes = SUPPORT_PRESET
+    _attr_supported_features = SUPPORT_FLAGS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature_step = PRECISION_HALVES
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Throttles calls to the warmup client update method."""
-        _LOGGER.debug("Updating Warmup devices")
-        self._warmup.update_all_devices()
-
-
-class WarmupThermostat(ClimateEntity):
-    """Representation of a Warmup device."""
-
-    def __init__(self, hass, device: Warmup4IEDevice, client: WarmupClient):
+    def __init__(self, coordinator: WarmupCoordinator, serial: str) -> None:
         """Initialize the climate device."""
-        _LOGGER.info("Setting up Warmup Thermostat %s", device.get_room_name())
-        self._device = device
-        self._client = client
-
-        self.attributes = {}
-        self._update_attributes_from_device()
-
-        self._current_temperature = device.current_temperature
-        self._target_temperature = device.target_temperature
-        self._min_temp = device.min_temp
-        self._max_temp = device.max_temp
-        self._name = device.get_room_name()
-        self._attr_unique_id = "warmup_" + device.get_serial_number()
-
-        self._current_operation_mode = device.run_mode
-        self._away = False
-        self._on = True
-
-        # https://developers.home-assistant.io/blog/2024/01/24/climate-climateentityfeatures-expanded
-        self._enable_turn_on_off_backwards_compatibility = False
+        super().__init__(coordinator)
+        self._serial = serial
+        self._attr_unique_id = "warmup_" + serial
 
     @property
-    def name(self):
+    def _device(self) -> Warmup4IEDevice:
+        """Return the latest data for this thermostat."""
+        return self.coordinator.data[self._serial]
+
+    @property
+    def available(self) -> bool:
+        """Return whether the thermostat is reachable."""
+        return (
+            super().available
+            and self._serial in self.coordinator.data
+            and not self._device.is_unavailable
+        )
+
+    @property
+    def name(self) -> str:
         """Return the name of the climate device."""
-        return self._name
+        return self._device.get_room_name()
 
     @property
-    def native_current_temperature(self):
+    def _is_off(self) -> bool:
+        return self._device.run_mode == CONST_MODE_OFF
+
+    @property
+    def _is_away(self) -> bool:
+        return self._device.run_mode in (CONST_MODE_AWAY, CONST_MODE_FROST)
+
+    @property
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self._current_temperature
+        return self._device.current_temperature
 
     @property
-    def native_target_temperature(self):
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self._target_temperature
+        return self._device.target_temperature
 
     @property
-    def hvac_mode(self):
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVACMode.
-        """
-        return HVAC_MAP_WARMUP_HEAT.get(self._current_operation_mode, HVACMode.AUTO)
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        return self._device.min_temp
 
     @property
-    def hvac_action(self):
-        """Return the current running hvac operation if supported.
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        return self._device.max_temp
 
-        Need to be one of HVACAction.
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return hvac operation ie. heat, cool mode."""
+        return HVAC_MAP_WARMUP_HEAT.get(self._device.run_mode, HVACMode.AUTO)
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """Return the current running hvac operation.
+
+        The Warmup API doesn't report whether the heating is on, so it is
+        inferred from the current and target temperatures.
         """
-        if not self._on:
+        if self._is_off:
             return HVACAction.OFF
-        if self._away:
+        if self._is_away:
             return HVACAction.IDLE
-        """ Infer if heating is active """
-        if self._target_temperature is not None and (self._current_temperature <= self._target_temperature):
+        current = self._device.current_temperature
+        target = self._device.target_temperature
+        if target is not None and current <= target:
             return HVACAction.HEATING
         return HVACAction.IDLE
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._away:
+        if self._is_away:
             return PRESET_AWAY
         return PRESET_HOME
 
     @property
-    def preset_modes(self):
-        """Return a list of available preset modes."""
-        return SUPPORT_PRESET
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the thermostat's other readings and settings."""
+        device = self._device
+        return {
+            "floor_temperature": device.floor_temperature,
+            "air_temperature": device.air_temperature,
+            "away_temperature": device.away_temperature,
+            "comfort_temperature": device.comfort_temperature,
+            "cost": device.cost,
+            "energy": device.energy,
+            "fixed_temperature": device.fixed_temperature,
+            "override_temperature": device.override_temperature,
+            "override_duration_mins": device.override_duration_mins,
+            "sleep_temperature": device.sleep_temperature,
+            "run_mode": device.run_mode,
+            "room_mode": device.room_mode,
+            "heating_target": device.heating_target,
+        }
 
-    def set_preset_mode(self, preset_mode):
+    async def _async_send(self, command: Callable[..., Any], *args: Any) -> None:
+        """Send a command to Warmup, then refresh every thermostat."""
+        await self.hass.async_add_executor_job(command, *args)
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-
         if preset_mode == PRESET_HOME:
-            """Turn away mode off."""
-            self._away = False
-            self._device.set_temperature_to_auto()
-
+            await self._async_send(self._device.set_temperature_to_auto)
         elif preset_mode == PRESET_AWAY:
-            """Turn away mode on."""
-            self._away = True
-            self._device.set_location_to_frost()
-
+            await self._async_send(self._device.set_location_to_frost)
         else:
             raise InvalidStateError
 
-        pass
-
-    def set_temperature(self, **kwargs):
-        """Set new target temperatures."""
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
+        await self._async_send(self._device.set_new_temperature, temperature)
 
-        self._current_operation_mode = CONST_MODE_FIXED
-        self._device.set_new_temperature(temperature)
-
-    def set_hvac_mode(self, hvac_mode):
-        """Set new target hvac mode.
-
-        Switch device on if was previously off
-        """
-
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
-            self._on = False
-            self._device.set_location_to_off()
-            self._current_operation_mode = CONST_MODE_OFF
-
+            await self._async_send(self._device.set_location_to_off)
         elif hvac_mode == HVACMode.AUTO:
-            self._on = True
-            self._device.set_temperature_to_auto()
-            self._current_operation_mode = CONST_MODE_PROGRAM
-
+            await self._async_send(self._device.set_temperature_to_auto)
         elif hvac_mode == HVACMode.HEAT:
-            self._on = True
-            self._device.set_temperature_to_manual()
-            self._current_operation_mode = CONST_MODE_FIXED
-
+            await self._async_send(self._device.set_temperature_to_manual)
         else:
             raise InvalidStateError
 
-    def turn_on(self) -> None:
+    async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        self.set_hvac_mode(HVACMode.AUTO)
+        await self.async_set_hvac_mode(HVACMode.AUTO)
 
-    def turn_off(self) -> None:
+    async def async_turn_off(self) -> None:
         """Turn the entity off."""
-        self.set_hvac_mode(HVACMode.OFF)
+        await self.async_set_hvac_mode(HVACMode.OFF)
 
-    def set_override(self, temperature, until=None):
+    async def async_set_override(
+        self, temperature: float, until: str | None = None
+    ) -> None:
         """Set a temperature override for this thermostat."""
         if until is None:
             until = (datetime.now() + timedelta(hours=1)).strftime("%H:%M")
-        self._device.set_override(temperature, until)
-        self.schedule_update_ha_state(True)
-
-    def update(self):
-        """Fetch new state data for this device.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        self._client.update()
-
-        self._current_operation_mode = self._device.get_run_mode()
-        self._target_temperature = self._device.target_temperature
-        self._current_temperature = self._device.current_temperature
-        self._min_temp = self._device.min_temp
-        self._max_temp = self._device.max_temp
-
-        self._update_attributes_from_device()
-
-        # set whether device is in away mode
-        if (
-            self._current_operation_mode == CONST_MODE_AWAY
-            or self._current_operation_mode == CONST_MODE_FROST
-        ):
-            self._away = True
-        else:
-            self._away = False
-
-        # set whether device is on/off
-        if self._current_operation_mode == CONST_MODE_OFF:
-            self._on = False
-        else:
-            self._on = True
-
-    def _update_attributes_from_device(self):
-        _attributes = {
-            "floor_temperature": self._device.floor_temperature,
-            "air_temperature": self._device.air_temperature,
-            "away_temperature": self._device.away_temperature,
-            "comfort_temperature": self._device.comfort_temperature,
-            "cost": self._device.cost,
-            "energy": self._device.energy,
-            "fixed_temperature": self._device.fixed_temperature,
-            "override_temperature": self._device.override_temperature,
-            "override_duration_mins": self._device.override_duration_mins,
-            "sleep_temperature": self._device.sleep_temperature,
-            "run_mode": self._device.run_mode,
-            "room_mode": self._device.room_mode,
-            "heating_target": self._device.heating_target,
-        }
-        self.attributes = _attributes
-
-    @property
-    def state_attributes(self) -> Dict[str, Any]:
-        """Return the optional state attributes."""
-        return {**super(WarmupThermostat, self).state_attributes, **self.attributes}
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        # return convert_temperature(
-        #    self._device.min_temp, UnitOfTemperature.CELSIUS, self.hass.config.units.temperature_unit
-        # )
-        return self._device.min_temp
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        # return convert_temperature(
-        #     self._device.max_temp, UnitOfTemperature.CELSIUS, self.hass.config.units.temperature_unit
-        # )
-        return self._device.max_temp
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
-    def native_temperature_unit(self):
-        """Return the unit of measurement."""
-        return UnitOfTemperature.CELSIUS
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return PRECISION_HALVES
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return SUPPORT_HVAC_HEAT
+        await self._async_send(self._device.set_override, temperature, until)

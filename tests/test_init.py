@@ -7,6 +7,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.warmup.const import DOMAIN
+from custom_components.warmup.coordinator import WarmupCoordinator
 
 from .common import TEST_PASSWORD, TEST_USERNAME, FakeWarmup4IE, make_device
 
@@ -24,7 +25,7 @@ async def _make_entry(hass) -> MockConfigEntry:
 
 
 async def test_setup_entry_success(hass):
-    """A valid entry sets up successfully and stores the client in runtime_data."""
+    """A valid entry sets up and stores a coordinator with the client in runtime_data."""
     FakeWarmup4IE.devices = [make_device()]
     entry = await _make_entry(hass)
 
@@ -33,7 +34,8 @@ async def test_setup_entry_success(hass):
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert isinstance(entry.runtime_data, FakeWarmup4IE)
+    assert isinstance(entry.runtime_data, WarmupCoordinator)
+    assert isinstance(entry.runtime_data.client, FakeWarmup4IE)
 
 
 async def test_setup_entry_auth_failed_triggers_reauth(hass):

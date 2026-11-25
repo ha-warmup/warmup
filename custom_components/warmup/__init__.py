@@ -11,13 +11,14 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from .coordinator import WarmupCoordinator
 from .warmup4ie import Warmup4IE
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
-type WarmupConfigEntry = ConfigEntry[Warmup4IE]
+type WarmupConfigEntry = ConfigEntry[WarmupCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WarmupConfigEntry) -> bool:
@@ -35,7 +36,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: WarmupConfigEntry) -> bo
     if not warmup.setup_finished:
         raise ConfigEntryAuthFailed("Invalid authentication for the Warmup account")
 
-    entry.runtime_data = warmup
+    coordinator = WarmupCoordinator(hass, entry, warmup)
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

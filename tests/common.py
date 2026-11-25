@@ -9,7 +9,40 @@ TEST_PASSWORD = "test-password"
 
 
 class FakeWarmup4IEDevice(Warmup4IEDevice):
-    """A Warmup4IEDevice that doesn't need network access."""
+    """A Warmup4IEDevice that records commands instead of sending them.
+
+    Commands change the device's state the way the Warmup servers would, so
+    the next coordinator refresh reports the result.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.commands = []
+
+    def set_new_temperature(self, new_temperature):
+        self.commands.append(("set_new_temperature", new_temperature))
+        self.target_temperature = new_temperature
+        self.run_mode = "fixed"
+
+    def set_temperature_to_auto(self):
+        self.commands.append(("set_temperature_to_auto",))
+        self.run_mode = "prog"
+
+    def set_temperature_to_manual(self):
+        self.commands.append(("set_temperature_to_manual",))
+        self.run_mode = "fixed"
+
+    def set_location_to_frost(self):
+        self.commands.append(("set_location_to_frost",))
+        self.run_mode = "frost"
+
+    def set_location_to_off(self):
+        self.commands.append(("set_location_to_off",))
+        self.run_mode = "off"
+
+    def set_override(self, temperature, until):
+        self.commands.append(("set_override", temperature, until))
+        self.run_mode = "override"
 
 
 def make_device(serial="SN123", room_name="Kitchen") -> FakeWarmup4IEDevice:
@@ -37,6 +70,11 @@ class FakeWarmup4IE(Warmup4IE):
     # scenario currently being tested (successful login, failed login, ...).
     login_should_succeed = True
     raise_connection_error = False
+    # Number of upcoming update_all_devices calls that are rejected (as when
+    # the access token has expired), and the result of logging in again.
+    rejected_updates = 0
+    relogin_should_succeed = True
+    relogin_count = 0
 
     def __init__(self, user, password):
         if FakeWarmup4IE.raise_connection_error:
@@ -57,7 +95,13 @@ class FakeWarmup4IE(Warmup4IE):
             self.setup_finished = True
 
     def connect(self):
-        return self.login_should_succeed
+        FakeWarmup4IE.relogin_count += 1
+        return FakeWarmup4IE.relogin_should_succeed
 
     def update_all_devices(self):
+        if FakeWarmup4IE.raise_connection_error:
+            raise requests.exceptions.ConnectionError("no network in tests")
+        if FakeWarmup4IE.rejected_updates:
+            FakeWarmup4IE.rejected_updates -= 1
+            return None
         return self._all_devices

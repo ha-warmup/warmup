@@ -24,6 +24,9 @@ Recent features from development that have not been formally released yet:
 ### Changed
 
 * Integration manifest declares the `climate.thermostats_heating` category
+* All thermostats on an account are updated with one request per minute, and become unavailable when the update fails or Warmup reports them unavailable, instead of showing stale values
+* Thermostats show their real mode and preset straight after Home Assistant starts, and update straight after a command
+* If Warmup rejects an update the integration logs in again, and asks you to reauthenticate if that fails
 * Requires Home Assistant 2026.11 or later
 * The climate entity uses the `native_` temperature properties, fixing the `temperature_unit` deprecation warning logged since Home Assistant 2026.11 (#96)
 * `entity_unique_id`s and `entity_id`s of existing YAML-created `warmup.*` entities are preserved across the migration to config entries

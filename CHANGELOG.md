@@ -19,6 +19,7 @@ Recent features from development that have not been formally released yet:
 * UI config flow: the integration can now be set up and reconfigured from Settings -> Devices & Services, instead of only via YAML
 * Reauthentication flow: Home Assistant now prompts to update the password on the existing entry if login starts failing, instead of silently breaking
 * Automatic import of existing `climate: - platform: warmup` YAML configuration into a config entry, with a repair issue pointing at the YAML that should be removed
+* A device for each thermostat, named after its room, with model, serial number and firmware version; each climate entity belongs to its device, so it can be given an area through the device
 * Brand icon and logo shipped in `custom_components/warmup/brand/`, so the Marketplace and integration pages show them
 
 ### Changed

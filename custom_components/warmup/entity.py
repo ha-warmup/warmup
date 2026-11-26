@@ -10,6 +10,16 @@ from .coordinator import WarmupCoordinator
 from .warmup4ie import Warmup4IEDevice
 
 
+def location_device_info(location_id: int, name: str) -> DeviceInfo:
+    """Return the device info for a Warmup location."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"location_{location_id}")},
+        manufacturer="Warmup",
+        model="Location",
+        name=name,
+    )
+
+
 class WarmupEntity(CoordinatorEntity[WarmupCoordinator]):
     """An entity belonging to one Warmup thermostat's device."""
 
@@ -27,6 +37,7 @@ class WarmupEntity(CoordinatorEntity[WarmupCoordinator]):
             name=device.get_room_name(),
             serial_number=serial,
             sw_version=device.firmware_version,
+            via_device_id=coordinator.location_device_ids.get(device.get_location_id()),
         )
 
     @property

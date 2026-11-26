@@ -15,15 +15,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfEnergy, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import WarmupConfigEntry
-from .const import DOMAIN
 from .coordinator import WarmupCoordinator
-from .entity import WarmupEntity
+from .entity import WarmupEntity, location_device_info
 from .warmup4ie import Warmup4IEDevice
 
 
@@ -198,12 +196,7 @@ class WarmupTariffSensor(CoordinatorEntity[WarmupCoordinator], SensorEntity):
         super().__init__(coordinator)
         self._location_id = location_id
         self._attr_unique_id = f"warmup_location_{location_id}_tariff"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"location_{location_id}")},
-            manufacturer="Warmup",
-            model="Location",
-            name=name,
-        )
+        self._attr_device_info = location_device_info(location_id, name)
         # Warmup doesn't say which currency its tariff is in.
         self._attr_native_unit_of_measurement = (
             f"{coordinator.hass.config.currency}/{UnitOfEnergy.KILO_WATT_HOUR}"

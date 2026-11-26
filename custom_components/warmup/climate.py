@@ -177,7 +177,12 @@ class WarmupThermostat(WarmupEntity, ClimateEntity):
 
     @property
     def native_target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
+        """Return the temperature we try to reach, or None when off.
+
+        Warmup reports a target of 0 for a room that is off.
+        """
+        if self._is_off:
+            return None
         return self._device.target_temperature
 
     @property

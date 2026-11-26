@@ -170,6 +170,20 @@ logger:
     custom_components.warmup.climate: debug
     custom_components.warmup.warmup4ie.warmup4ie: debug
 ```
+### Modes
+
+Each thermostat's climate entity maps Warmup's modes to Home Assistant's:
+
+| Home Assistant | Warmup | What the room does |
+|---|---|---|
+| HVAC mode **Auto** | Program (schedule) | Follows the room's schedule, including any temporary override |
+| HVAC mode **Heat** | Fixed | Holds a fixed temperature. Setting a temperature switches the room to Heat |
+| HVAC mode **Off** | Off | Doesn't heat. No target temperature is shown |
+| Preset **Away** | Frost protection | Heats only enough to prevent frost. Shown with HVAC mode Heat |
+| Preset **Home** | Program (schedule) | Leaves away: the room follows its schedule again |
+
+Off and Away apply to that room only. The `warmup.set_override` action sets a temporary temperature until a time of day, after which the room goes back to its schedule.
+
 ### Add your devices to the dashboard
 
 Our wiki has some [ideas on how to configure warmup

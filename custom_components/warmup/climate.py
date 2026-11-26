@@ -263,7 +263,7 @@ class WarmupThermostat(WarmupEntity, ClimateEntity):
         if preset_mode == PRESET_HOME:
             await self._async_send(self._device.set_temperature_to_auto)
         elif preset_mode == PRESET_AWAY:
-            await self._async_send(self._device.set_location_to_frost)
+            await self._async_send(self._device.set_room_to_frost)
         else:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -281,7 +281,7 @@ class WarmupThermostat(WarmupEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
-            await self._async_send(self._device.set_location_to_off)
+            await self._async_send(self._device.set_room_to_off)
         elif hvac_mode == HVACMode.AUTO:
             await self._async_send(self._device.set_temperature_to_auto)
         elif hvac_mode == HVACMode.HEAT:

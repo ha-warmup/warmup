@@ -166,7 +166,7 @@ async def test_set_hvac_mode_off(hass):
     )
     await hass.async_block_till_done()
 
-    assert device.commands == [("set_location_to_off",)]
+    assert device.commands == [("set_room_to_off",)]
     state = hass.states.get(entity_id)
     assert state.state == HVACMode.OFF
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
@@ -237,3 +237,28 @@ async def test_unsupported_preset_raises_validation_error(hass):
         )
 
     assert excinfo.value.translation_key == "unsupported_preset_mode"
+
+
+async def test_away_and_off_act_on_one_room(hass):
+    """Away and off change only the room they're set on (issue #84)."""
+    kitchen = _device("AAA111", "Kitchen")
+    lounge = _device("BBB222", "Lounge")
+    _, (kitchen_id, lounge_id) = await _setup(hass, kitchen, lounge)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: kitchen_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: kitchen_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert kitchen.commands == [("set_room_to_frost",), ("set_room_to_off",)]
+    assert lounge.commands == []
+    assert hass.states.get(lounge_id).state == HVACMode.AUTO

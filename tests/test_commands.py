@@ -57,3 +57,40 @@ def test_command_without_login_raises(mock_post):
     with pytest.raises(warmup4ie.WarmupCommandError, match="not logged in"):
         client.set_location_to_off(7)
     mock_post.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("method", "mutation"),
+    [("set_room_to_off", "deviceOff"), ("set_room_to_frost", "deviceFrost")],
+)
+@patch(PATCH_POST)
+def test_room_mutation(mock_post, method, mutation):
+    """Off and frost for one room use the GraphQL mutation for that room."""
+    mock_post.return_value = _make_response(
+        200, {"status": "success", "data": {mutation: True}}
+    )
+    client = _client()
+
+    getattr(client, method)(20595, 39768)
+
+    assert mock_post.call_args.kwargs["url"] == client.URL
+    assert mock_post.call_args.kwargs["json"] == {
+        "query": f"mutation {{ {mutation}(lid: 20595, rid: 39768) }}"
+    }
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        _make_response(200, {"status": "success", "data": {"deviceOff": False}}),
+        _make_response(200, {"status": "success", "errors": [{"message": "no"}]}),
+        _make_response(401, {}),
+    ],
+)
+@patch(PATCH_POST)
+def test_rejected_room_mutation_raises(mock_post, response):
+    """A room mutation Warmup doesn't accept raises WarmupCommandError."""
+    mock_post.return_value = response
+
+    with pytest.raises(warmup4ie.WarmupCommandError, match="Turning off room 39768"):
+        _client().set_room_to_off(20595, 39768)

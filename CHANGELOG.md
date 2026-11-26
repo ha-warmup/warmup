@@ -14,6 +14,12 @@ are based on date using format YYYY.M.D (no leading zeroes)
 
 Recent features from development that have not been formally released yet:
 
+### Fixed
+
+* Setting a temperature no longer logs that Warmup declined it when it was accepted, and switching to auto or heat no longer blanks the target temperature until the next update
+* A command Warmup rejects, or a lost connection while sending one, now shows an error in Home Assistant instead of only being logged
+* Errors for unsupported presets and HVAC modes are translated messages
+
 ## 2026.11.26 release
 
 ### Added

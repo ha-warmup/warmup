@@ -93,12 +93,27 @@ async def test_energy_resets_at_midnight(hass):
     assert float(hass.states.get(_entity_id(hass, "energy_today")).state) == 0.0
 
 
-async def test_cost_sensor_uses_home_assistant_currency(hass):
-    """Today's cost is in the currency configured in Home Assistant."""
-    await hass.config.async_update(currency="GBP")
+async def test_cost_sensor_disabled_by_default(hass):
+    """Today's cost starts disabled."""
     await _setup(hass, _device())
 
-    cost = hass.states.get(_entity_id(hass, "cost_today"))
+    entry = er.async_get(hass).async_get(_entity_id(hass, "cost_today"))
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entry.entity_id) is None
+
+
+async def test_cost_sensor_uses_home_assistant_currency(hass):
+    """Once enabled, today's cost is in the currency configured in Home Assistant."""
+    await hass.config.async_update(currency="GBP")
+    config_entry = await _setup(hass, _device())
+
+    registry = er.async_get(hass)
+    entity_id = _entity_id(hass, "cost_today")
+    registry.async_update_entity(entity_id, disabled_by=None)
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    cost = hass.states.get(entity_id)
     assert float(cost.state) == 0.29
     assert cost.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.MONETARY
     assert cost.attributes[ATTR_UNIT_OF_MEASUREMENT] == "GBP"

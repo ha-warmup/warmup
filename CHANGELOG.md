@@ -16,7 +16,7 @@ Recent features from development that have not been formally released yet:
 
 ### Added
 
-* Sensors for each thermostat: floor temperature, second floor temperature, air temperature, energy used today (kWh, usable in the Energy dashboard) and cost today (in Home Assistant's currency). A probe the thermostat reports as faulty, usually because none is connected, makes its sensor unavailable; floor temperature 2 starts disabled when no second probe is connected (#45, #41, #95)
+* Sensors for each thermostat: floor temperature, second floor temperature, air temperature, energy used today (kWh, usable in the Energy dashboard) and cost today (in Home Assistant's currency, disabled by default). A probe the thermostat reports as faulty, usually because none is connected, makes its sensor unavailable; floor temperature 2 starts disabled when no second probe is connected (#45, #41, #95)
 * A device for each thermostat, named after its room, with model, serial number and firmware version; each climate entity belongs to its device, so it can be given an area through the device
 
 ### Changed

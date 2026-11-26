@@ -81,6 +81,7 @@ SENSORS: tuple[WarmupSensorEntityDescription, ...] = (
         key="cost_today",
         translation_key="cost_today",
         device_class=SensorDeviceClass.MONETARY,
+        entity_registry_enabled_default=False,
         suggested_display_precision=2,
         value_fn=lambda device: _to_float(device.cost),
     ),

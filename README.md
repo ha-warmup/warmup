@@ -227,7 +227,7 @@ Each thermostat is a device in Home Assistant with a climate entity and these se
 * **Floor temperature** and **Floor temperature 2**: the floor probes. Floor temperature 2 starts disabled when the thermostat has no second probe connected; enable it in the device page if you add one.
 * **Air temperature**
 * **Energy today** (kWh): resets at midnight, and can be added to the Energy dashboard.
-* **Cost today**: today's energy at the tariff set in the Warmup app, in Home Assistant's currency.
+* **Cost today**: today's energy at the tariff set in the Warmup app, in Home Assistant's currency. Disabled by default; enable it from the device page.
 
 A sensor whose probe the thermostat reports as faulty, usually because none is connected, is unavailable.
 

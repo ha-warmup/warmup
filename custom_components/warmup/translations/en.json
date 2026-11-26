@@ -91,5 +91,19 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Warmup didn't accept the command. {error}"
+    },
+    "cannot_connect": {
+      "message": "Unable to connect to the Warmup servers: {error}"
+    },
+    "unsupported_preset_mode": {
+      "message": "Warmup thermostats don't support the preset mode \"{preset_mode}\"."
+    },
+    "unsupported_hvac_mode": {
+      "message": "Warmup thermostats don't support the HVAC mode \"{hvac_mode}\"."
+    }
   }
 }

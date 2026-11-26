@@ -25,17 +25,19 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import InvalidStateError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_platform, issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+import requests
 import voluptuous as vol
 
 from . import WarmupConfigEntry
 from .const import DOMAIN
 from .coordinator import WarmupCoordinator
 from .entity import WarmupEntity
+from .warmup4ie import WarmupCommandError
 
 """ temperature utility will stop working in HA 2023.4. Removed it for now, as CELCIUS is the only temperature standard this module supports anyway. """
 # from homeassistant.util.temperature import convert as convert_temperature
@@ -239,8 +241,22 @@ class WarmupThermostat(WarmupEntity, ClimateEntity):
 
     async def _async_send(self, command: Callable[..., Any], *args: Any) -> None:
         """Send a command to Warmup, then refresh every thermostat."""
-        await self.hass.async_add_executor_job(command, *args)
-        await self.coordinator.async_request_refresh()
+        try:
+            await self.hass.async_add_executor_job(command, *args)
+        except WarmupCommandError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        except requests.exceptions.RequestException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        finally:
+            await self.coordinator.async_request_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -249,7 +265,11 @@ class WarmupThermostat(WarmupEntity, ClimateEntity):
         elif preset_mode == PRESET_AWAY:
             await self._async_send(self._device.set_location_to_frost)
         else:
-            raise InvalidStateError
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_preset_mode",
+                translation_placeholders={"preset_mode": preset_mode},
+            )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -267,7 +287,11 @@ class WarmupThermostat(WarmupEntity, ClimateEntity):
         elif hvac_mode == HVACMode.HEAT:
             await self._async_send(self._device.set_temperature_to_manual)
         else:
-            raise InvalidStateError
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_hvac_mode",
+                translation_placeholders={"hvac_mode": hvac_mode},
+            )
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""

@@ -48,6 +48,10 @@ ROOM_MODE = {1: "prog", 3: "fixed"}
 HEATING_TARGET = {0: "floor", 1: "air"}
 
 
+class WarmupCommandError(Exception):
+    """Warmup didn't accept a command."""
+
+
 class Warmup4IE:
     TOKEN_URL = "https://api.warmup.com/apps/app/v1"
     LOGIN_URL = "https://apil.warmup.com/login"
@@ -337,43 +341,48 @@ class Warmup4IE:
                     device_to_update.update_room(room, thermostat)
         return self._all_devices
 
-    def set_override(self, room_id, temperature, until):
+    def _send_command(self, description, request):
+        """Send a command to Warmup's command API.
+
+        Raises WarmupCommandError if Warmup doesn't accept it. Doesn't refresh
+        the device data; callers fetch it again when they need it.
+        """
         if self._warmup_access_token is None:
-            return
+            raise WarmupCommandError(f"{description}: not logged in")
         body = {
             "account": {"email": self._user, "token": self._warmup_access_token},
-            "request": {
+            "request": request,
+        }
+        response = requests.post(
+            url=self.TOKEN_URL, headers=self._v1_headers(), json=body
+        )
+        try:
+            result = response.json()["status"]["result"]
+        except ValueError, KeyError, TypeError:
+            result = None
+        if response.status_code != 200 or result != "success":
+            raise WarmupCommandError(
+                f"{description}: Warmup responded with HTTP "
+                f"{response.status_code}, result {result!r}"
+            )
+        _LOGGER.debug("%s: succeeded, response '%s'", description, response.text)
+
+    def set_override(self, room_id, temperature, until):
+        self._send_command(
+            f"Setting an override of {temperature} until {until} in room {room_id}",
+            {
                 "method": "setOverride",
                 "rooms": [room_id],
                 "temp": f"{int(temperature * 10):03d}",
                 "until": until,
                 "type": 3,
             },
-        }
-
-        response = requests.post(
-            url=self.TOKEN_URL, headers=self._v1_headers(), json=body
         )
-        # check if request was accepted and if request was successful
-        if (
-            response.status_code != 200
-            or response.json()["status"]["result"] != "success"
-        ):
-            _LOGGER.error("Setting override failed, %s", response)
-            return None
-        _LOGGER.info(
-            "Successfully set override, response from server: '%s'", response.text
-        )
-        self.update_all_devices()
 
     def _set_location_mode(self, location_id, location_mode):
-        """set device to frost protection mode"""
-        # make sure the room/device is already configured
-        if self._warmup_access_token is None:
-            return
-        body = {
-            "account": {"email": self._user, "token": self._warmup_access_token},
-            "request": {
+        self._send_command(
+            f"Setting location {location_id} to {location_mode}",
+            {
                 "method": "setModes",
                 "values": {
                     "holEnd": "-",
@@ -385,63 +394,17 @@ class Warmup4IE:
                     "locMode": location_mode,
                 },
             },
-        }
-        response = requests.post(
-            url=self.TOKEN_URL, headers=self._v1_headers(), json=body
         )
-        # check if request was accepted and if request was successful
-        if (
-            response.status_code != 200
-            or response.json()["status"]["result"] != "success"
-        ):
-            _LOGGER.error(
-                "Setting location mode to %s failed, %s", location_mode, response
-            )
-            return
-        _LOGGER.info(
-            "Successfully set location mode to %s, response from server: '%s'",
-            location_mode,
-            response.text,
-        )
-        self.update_all_devices()
 
     def _set_temperature(self, room_id, mode, temperature=None):
-        # make sure the room/device is already configured
-        if self._warmup_access_token is None:
-            return
-        body = {
-            "account": {"email": self._user, "token": self._warmup_access_token},
-            "request": {"method": "setProgramme", "roomId": room_id, "roomMode": mode},
-        }
-
+        request = {"method": "setProgramme", "roomId": room_id, "roomMode": mode}
         if temperature is not None:
-            body["request"]["fixed"] = {"fixedTemp": f"{int(temperature * 10):03d}"}
-
-        response = requests.post(
-            url=self.TOKEN_URL, headers=self._v1_headers(), json=body
+            request["fixed"] = {"fixedTemp": f"{int(temperature * 10):03d}"}
+        self._send_command(
+            f"Setting room {room_id} to {mode}"
+            + ("" if temperature is None else f" at {temperature}"),
+            request,
         )
-        # check if request was accepted and if request was successful
-        if (
-            response.status_code != 200
-            or response.json()["status"]["result"] != "success"
-        ):
-            _LOGGER.error(
-                "Setting room %s - mode to %s, temperature to %s failed, %s",
-                room_id,
-                mode,
-                temperature,
-                response,
-            )
-            return None
-        _LOGGER.info(
-            "Successfully set room %s - mode to %s, temperature to %s "
-            "response from server: '%s'",
-            room_id,
-            mode,
-            temperature,
-            response.text,
-        )
-        self.update_all_devices()
 
     def set_location_to_frost(self, location_id):
         self._set_location_mode(location_id, "frost")
@@ -450,13 +413,13 @@ class Warmup4IE:
         self._set_location_mode(location_id, "off")
 
     def set_temperature_to_auto(self, room_id):
-        return self._set_temperature(room_id, "prog")
+        self._set_temperature(room_id, "prog")
 
     def set_temperature_to_manual(self, room_id):
-        return self._set_temperature(room_id, "fixed")
+        self._set_temperature(room_id, "fixed")
 
     def set_new_temperature(self, room_id, new_temperature):
-        return self._set_temperature(room_id, "fixed", new_temperature)
+        self._set_temperature(room_id, "fixed", new_temperature)
 
 
 class Warmup4IEDevice:
@@ -633,42 +596,25 @@ class Warmup4IEDevice:
         return self._device_id
 
     def set_new_temperature(self, new_temperature):
-        """set new target temperature"""
-        returned_temp = self._warmup4ie_account.set_new_temperature(
-            self._room_id, new_temperature
-        )
-        if new_temperature != returned_temp:
-            _LOGGER.info(
-                "Server declined to set new target temperature to %.1f°C",
-                new_temperature,
-            )
-            return
-        self.target_temperature = returned_temp
-        _LOGGER.info(
-            "Successfully set new target temperature to %.1f°C", self.target_temperature
-        )
+        """Set a fixed target temperature."""
+        self._warmup4ie_account.set_new_temperature(self._room_id, new_temperature)
 
     def set_temperature_to_auto(self):
-        """set device to automatic mode"""
-        self.target_temperature = self._warmup4ie_account.set_temperature_to_auto(
-            self._room_id
-        )
+        """Follow the room's schedule."""
+        self._warmup4ie_account.set_temperature_to_auto(self._room_id)
 
     def set_temperature_to_manual(self):
-        """set device to manual mode"""
-        self.target_temperature = self._warmup4ie_account.set_temperature_to_manual(
-            self._room_id
-        )
+        """Hold the room's fixed temperature."""
+        self._warmup4ie_account.set_temperature_to_manual(self._room_id)
 
     def set_location_to_frost(self):
-        """set device to frost protection mode"""
+        """Set the room's whole location to frost protection."""
         self._warmup4ie_account.set_location_to_frost(self._loc_id)
 
     def set_location_to_off(self):
-        """turn off device"""
+        """Turn off the room's whole location."""
         self._warmup4ie_account.set_location_to_off(self._loc_id)
 
     def set_override(self, temperature, until):
-        self.override_duration_mins = self._warmup4ie_account.set_override(
-            self._room_id, temperature, until
-        )
+        """Override the room's temperature until a time of day."""
+        self._warmup4ie_account.set_override(self._room_id, temperature, until)

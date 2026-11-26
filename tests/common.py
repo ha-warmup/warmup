@@ -19,28 +19,41 @@ class FakeWarmup4IEDevice(Warmup4IEDevice):
         super().__init__(*args, **kwargs)
         self.commands = []
 
+    # When set, every command raises this instead of being recorded.
+    command_error = None
+
+    def _check_command(self):
+        if FakeWarmup4IEDevice.command_error is not None:
+            raise FakeWarmup4IEDevice.command_error
+
     def set_new_temperature(self, new_temperature):
+        self._check_command()
         self.commands.append(("set_new_temperature", new_temperature))
         self.target_temperature = new_temperature
         self.run_mode = "fixed"
 
     def set_temperature_to_auto(self):
+        self._check_command()
         self.commands.append(("set_temperature_to_auto",))
         self.run_mode = "prog"
 
     def set_temperature_to_manual(self):
+        self._check_command()
         self.commands.append(("set_temperature_to_manual",))
         self.run_mode = "fixed"
 
     def set_location_to_frost(self):
+        self._check_command()
         self.commands.append(("set_location_to_frost",))
         self.run_mode = "frost"
 
     def set_location_to_off(self):
+        self._check_command()
         self.commands.append(("set_location_to_off",))
         self.run_mode = "off"
 
     def set_override(self, temperature, until):
+        self._check_command()
         self.commands.append(("set_override", temperature, until))
         self.run_mode = "override"
 

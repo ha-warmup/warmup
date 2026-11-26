@@ -4,9 +4,11 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
     PRESET_BOOST,
+    PRESET_HOME,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -224,19 +226,23 @@ async def test_connection_error_on_command(hass):
     assert excinfo.value.translation_key == "cannot_connect"
 
 
-async def test_unsupported_preset_raises_validation_error(hass):
-    """A preset the integration offers but can't set raises a validation error."""
-    _, (entity_id,) = await _setup(hass, _device())
+async def test_boost_preset_not_offered(hass):
+    """Warmup has no boost mode, so boost isn't offered and can't be set."""
+    device = _device()
+    _, (entity_id,) = await _setup(hass, device)
 
-    with pytest.raises(ServiceValidationError) as excinfo:
+    assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODES] == [
+        PRESET_AWAY,
+        PRESET_HOME,
+    ]
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_BOOST},
             blocking=True,
         )
-
-    assert excinfo.value.translation_key == "unsupported_preset_mode"
+    assert device.commands == []
 
 
 async def test_away_and_off_act_on_one_room(hass):

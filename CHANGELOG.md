@@ -16,6 +16,7 @@ Recent features from development that have not been formally released yet:
 
 ### Fixed
 
+* The boost preset is no longer offered: Warmup has no boost mode, and choosing it raised an error. Use `warmup.set_override` for a temporary temperature
 * A thermostat that is off shows no target temperature, instead of 0 (#89)
 * Turning a thermostat off, or setting its preset to away, now affects only that room; it used to switch off, or set to frost, every room at the location (#84)
 * Setting a temperature no longer logs that Warmup declined it when it was accepted, and switching to auto or heat no longer blanks the target temperature until the next update

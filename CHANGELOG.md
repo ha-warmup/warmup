@@ -14,6 +14,13 @@ are based on date using format YYYY.M.D (no leading zeroes)
 
 Recent features from development that have not been formally released yet:
 
+### Added
+
+* Controls for every room at a location, on the location's device: Frost protect all rooms, Turn off all rooms, Resume schedule in all rooms and Cancel all overrides buttons
+* Holiday mode: `warmup.set_holiday` and `warmup.cancel_holiday` actions, a Holiday binary sensor, and Holiday start, end and temperature sensors (disabled by default)
+* Location mode sensor (disabled by default) showing Warmup's mode for the location
+* The `warmup.set_override` action has a field selector for each field in the UI
+
 ### Fixed
 
 * The boost preset is no longer offered: Warmup has no boost mode, and choosing it raised an error. Use `warmup.set_override` for a temporary temperature

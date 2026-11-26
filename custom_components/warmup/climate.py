@@ -24,19 +24,17 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform, issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import requests
 import voluptuous as vol
 
 from . import WarmupConfigEntry
 from .const import DOMAIN
 from .coordinator import WarmupCoordinator
-from .entity import WarmupEntity
-from .warmup4ie import WarmupCommandError
+from .entity import WarmupEntity, async_run_command
 
 """ temperature utility will stop working in HA 2023.4. Removed it for now, as CELCIUS is the only temperature standard this module supports anyway. """
 # from homeassistant.util.temperature import convert as convert_temperature
@@ -245,22 +243,7 @@ class WarmupThermostat(WarmupEntity, ClimateEntity):
 
     async def _async_send(self, command: Callable[..., Any], *args: Any) -> None:
         """Send a command to Warmup, then refresh every thermostat."""
-        try:
-            await self.hass.async_add_executor_job(command, *args)
-        except WarmupCommandError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_failed",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except requests.exceptions.RequestException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        finally:
-            await self.coordinator.async_request_refresh()
+        await async_run_command(self.hass, self.coordinator, command, *args)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""

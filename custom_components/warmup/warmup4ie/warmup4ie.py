@@ -27,6 +27,7 @@ climate:
 """
 
 from collections import namedtuple
+import json
 import logging
 
 import requests
@@ -95,6 +96,8 @@ class Warmup4IE:
         self._locations = {}
         self._location_tariffs = {}
         self._location_tariff_types = {}
+        self._location_modes = {}
+        self._location_holidays = {}
         self._rooms = {}
         self._all_devices = {}
         self.update_all_devices()
@@ -216,6 +219,18 @@ class Warmup4IE:
         """
         return (self._location_tariffs.get(location_id) or {}).get(fuel)
 
+    def get_location_mode(self, location_id):
+        """Return Warmup's mode for the location, e.g. "frost" or "holiday"."""
+        return self._location_modes.get(location_id)
+
+    def get_location_holiday(self, location_id):
+        """Return the location's holiday as reported by Warmup.
+
+        A dict with ``holStart`` and ``holEnd`` ("YYYY-MM-DD HH:MM:SS" in the
+        location's time zone, or None) and ``holTemp`` (tenths of a degree).
+        """
+        return self._location_holidays.get(location_id)
+
     def get_location_tariff_type(self, location_id):
         """Return the location's tariff type: "single" or "dual"."""
         return self._location_tariff_types.get(location_id)
@@ -260,6 +275,8 @@ class Warmup4IE:
             "allLocations: locations { "
             "id "
             "name "
+            "locMode "
+            "holiday { holStart holEnd holTemp } "
             "tariffType "
             "electricity { cost low start end } "
             "gas { cost low start end } "
@@ -316,6 +333,8 @@ class Warmup4IE:
                 "gas": location.get("gas"),
             }
             self._location_tariff_types[location["id"]] = location.get("tariffType")
+            self._location_modes[location["id"]] = location.get("locMode")
+            self._location_holidays[location["id"]] = location.get("holiday")
             for room in location["rooms"]:
                 self._rooms[room["id"]] = room["roomName"]
                 for thermostat in room["thermostat4ies"]:
@@ -406,17 +425,18 @@ class Warmup4IE:
             request,
         )
 
-    def _send_room_mutation(self, description, mutation, location_id, room_id):
-        """Run a GraphQL mutation that acts on one room and returns a Boolean.
+    def _send_mutation(self, description, mutation, arguments):
+        """Run a GraphQL mutation that returns a Boolean.
 
-        Raises WarmupCommandError if Warmup doesn't accept it.
+        ``arguments`` maps argument names to int or str values. Raises
+        WarmupCommandError if Warmup doesn't accept it.
         """
         if self._warmup_access_token is None:
             raise WarmupCommandError(f"{description}: not logged in")
-        body = {
-            "query": f"mutation {{ {mutation}(lid: {int(location_id)}, "
-            f"rid: {int(room_id)}) }}"
-        }
+        args = ", ".join(
+            f"{name}: {json.dumps(value)}" for name, value in arguments.items()
+        )
+        body = {"query": f"mutation {{ {mutation}({args}) }}"}
         response = requests.post(url=self.URL, headers=self._v2_headers(), json=body)
         try:
             data = response.json()
@@ -433,6 +453,69 @@ class Warmup4IE:
                 f"{response.status_code}, {response.text[:200]}"
             )
         _LOGGER.debug("%s: succeeded", description)
+
+    def _send_room_mutation(self, description, mutation, location_id, room_id):
+        """Run a GraphQL mutation that acts on one room."""
+        self._send_mutation(
+            description, mutation, {"lid": int(location_id), "rid": int(room_id)}
+        )
+
+    def set_all_rooms_to_off(self, location_id):
+        """Turn off every room at a location."""
+        self._send_mutation(
+            f"Turning off every room at location {location_id}",
+            "deviceOff",
+            {"lid": int(location_id)},
+        )
+
+    def set_all_rooms_to_frost(self, location_id):
+        """Set every room at a location to frost protection."""
+        self._send_mutation(
+            f"Setting every room at location {location_id} to frost protection",
+            "deviceFrost",
+            {"lid": int(location_id)},
+        )
+
+    def set_all_rooms_to_program(self, location_id):
+        """Set every room at a location to follow its schedule."""
+        self._send_mutation(
+            f"Setting every room at location {location_id} to its schedule",
+            "deviceProgram",
+            {"lid": int(location_id)},
+        )
+
+    def set_holiday(self, location_id, temperature, start, end):
+        """Put every room at a location in holiday mode between two times.
+
+        ``start`` and ``end`` are "YYYY-MM-DD HH:MM:SS" in the location's time
+        zone; ``temperature`` is in degrees Celsius.
+        """
+        self._send_mutation(
+            f"Setting holiday at location {location_id} from {start} to {end}",
+            "deviceHoliday",
+            {
+                "lid": int(location_id),
+                "temperature": int(round(temperature * 10)),
+                "start": start,
+                "end": end,
+            },
+        )
+
+    def cancel_holiday(self, location_id):
+        """Cancel holiday mode for every room at a location."""
+        self._send_mutation(
+            f"Cancelling holiday at location {location_id}",
+            "cancelHoliday",
+            {"lid": int(location_id)},
+        )
+
+    def cancel_all_overrides(self, location_id):
+        """Cancel the temperature override in every room at a location."""
+        self._send_mutation(
+            f"Cancelling all overrides at location {location_id}",
+            "cancelAllOverrides",
+            {"lid": int(location_id)},
+        )
 
     def set_room_to_off(self, location_id, room_id):
         """Turn off one room."""

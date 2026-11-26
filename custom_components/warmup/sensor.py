@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import time
+from datetime import datetime, time
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -17,12 +17,16 @@ from homeassistant.const import UnitOfEnergy, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import WarmupConfigEntry
 from .coordinator import WarmupCoordinator
-from .entity import WarmupEntity, location_device_info
+from .entity import (
+    WarmupEntity,
+    WarmupLocationEntity,
+    parse_warmup_datetime,
+    warmup_locations,
+)
 from .warmup4ie import Warmup4IEDevice
 
 
@@ -105,10 +109,7 @@ async def async_setup_entry(
         for serial in coordinator.data
         for description in SENSORS
     )
-    locations = {
-        device.get_location_id(): device.get_location_name()
-        for device in coordinator.data.values()
-    }
+    locations = warmup_locations(coordinator)
     async_add_entities(
         WarmupLocationSensor(coordinator, location_id, name, description)
         for location_id, name in locations.items()
@@ -253,9 +254,53 @@ def _fuel_sensors(fuel: str) -> tuple[WarmupLocationSensorEntityDescription, ...
     )
 
 
+def _holiday(client: Any, location_id: int) -> dict[str, Any]:
+    return client.get_location_holiday(location_id) or {}
+
+
+LOCATION_MODES = ["geo", "not_geo", "off", "frost", "holiday"]
+
 LOCATION_SENSORS: tuple[WarmupLocationSensorEntityDescription, ...] = (
     *_fuel_sensors("electricity"),
     *_fuel_sensors("gas"),
+    WarmupLocationSensorEntityDescription(
+        key="holiday_start",
+        translation_key="holiday_start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda client, loc: parse_warmup_datetime(
+            _holiday(client, loc).get("holStart")
+        ),
+    ),
+    WarmupLocationSensorEntityDescription(
+        key="holiday_end",
+        translation_key="holiday_end",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda client, loc: parse_warmup_datetime(
+            _holiday(client, loc).get("holEnd")
+        ),
+    ),
+    WarmupLocationSensorEntityDescription(
+        key="holiday_temperature",
+        translation_key="holiday_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        # Warmup reports 0 when no holiday is set.
+        value_fn=lambda client, loc: (
+            _holiday(client, loc).get("holTemp") / 10
+            if _holiday(client, loc).get("holStart")
+            and _holiday(client, loc).get("holTemp") is not None
+            else None
+        ),
+    ),
+    WarmupLocationSensorEntityDescription(
+        key="location_mode",
+        translation_key="location_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=LOCATION_MODES,
+        value_fn=lambda client, loc: (
+            mode if (mode := client.get_location_mode(loc)) in LOCATION_MODES else None
+        ),
+    ),
     WarmupLocationSensorEntityDescription(
         key="tariff_type",
         translation_key="tariff_type",
@@ -266,11 +311,10 @@ LOCATION_SENSORS: tuple[WarmupLocationSensorEntityDescription, ...] = (
 )
 
 
-class WarmupLocationSensor(CoordinatorEntity[WarmupCoordinator], SensorEntity):
-    """A tariff detail for a Warmup location."""
+class WarmupLocationSensor(WarmupLocationEntity, SensorEntity):
+    """A tariff, holiday or mode detail for a Warmup location."""
 
     entity_description: WarmupLocationSensorEntityDescription
-    _attr_has_entity_name = True
     _attr_entity_registry_enabled_default = False
 
     def __init__(
@@ -281,11 +325,8 @@ class WarmupLocationSensor(CoordinatorEntity[WarmupCoordinator], SensorEntity):
         description: WarmupLocationSensorEntityDescription,
     ) -> None:
         """Initialise the sensor for this location."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, location_id, name, description.key)
         self.entity_description = description
-        self._location_id = location_id
-        self._attr_unique_id = f"warmup_location_{location_id}_{description.key}"
-        self._attr_device_info = location_device_info(location_id, name)
         if description.is_rate:
             # Warmup doesn't say which currency its tariff is in.
             self._attr_native_unit_of_measurement = (
@@ -294,8 +335,8 @@ class WarmupLocationSensor(CoordinatorEntity[WarmupCoordinator], SensorEntity):
             self._attr_suggested_display_precision = 3
 
     @property
-    def native_value(self) -> StateType:
-        """Return the tariff detail."""
+    def native_value(self) -> StateType | datetime:
+        """Return the detail."""
         return self.entity_description.value_fn(
             self.coordinator.client, self._location_id
         )

@@ -98,6 +98,11 @@ class FakeWarmup4IE(Warmup4IE):
     # Location id -> {fuel: tariff dict}, and location id -> tariff type.
     tariffs = {}
     tariff_types = {}
+    # Location id -> Warmup location mode, and location id -> holiday dict.
+    location_modes = {}
+    holidays = {}
+    # Location-wide commands sent, as (method name, *arguments).
+    location_commands = []
     rejected_updates = 0
     relogin_should_succeed = True
     relogin_count = 0
@@ -114,6 +119,8 @@ class FakeWarmup4IE(Warmup4IE):
         self._locations = {}
         self._location_tariffs = FakeWarmup4IE.tariffs
         self._location_tariff_types = FakeWarmup4IE.tariff_types
+        self._location_modes = FakeWarmup4IE.location_modes
+        self._location_holidays = FakeWarmup4IE.holidays
         self._rooms = {}
         self._all_devices = {}
         for device in getattr(FakeWarmup4IE, "devices", []):
@@ -121,6 +128,29 @@ class FakeWarmup4IE(Warmup4IE):
 
         if self.login_should_succeed:
             self.setup_finished = True
+
+    def _location_command(self, name, *args):
+        if FakeWarmup4IEDevice.command_error is not None:
+            raise FakeWarmup4IEDevice.command_error
+        FakeWarmup4IE.location_commands.append((name, *args))
+
+    def set_all_rooms_to_off(self, location_id):
+        self._location_command("set_all_rooms_to_off", location_id)
+
+    def set_all_rooms_to_frost(self, location_id):
+        self._location_command("set_all_rooms_to_frost", location_id)
+
+    def set_all_rooms_to_program(self, location_id):
+        self._location_command("set_all_rooms_to_program", location_id)
+
+    def cancel_all_overrides(self, location_id):
+        self._location_command("cancel_all_overrides", location_id)
+
+    def set_holiday(self, location_id, temperature, start, end):
+        self._location_command("set_holiday", location_id, temperature, start, end)
+
+    def cancel_holiday(self, location_id):
+        self._location_command("cancel_holiday", location_id)
 
     def connect(self):
         FakeWarmup4IE.relogin_count += 1

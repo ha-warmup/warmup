@@ -192,6 +192,7 @@ async def test_location_sensors_on_location_device(hass):
         entry
         for entry in er.async_entries_for_config_entry(registry, config_entry.entry_id)
         if entry.unique_id.startswith("warmup_location_")
+        and entry.domain == SENSOR_DOMAIN
     ]
     assert {entry.unique_id for entry in location_entries} == {
         f"warmup_location_loc1_{key}"
@@ -203,7 +204,16 @@ async def test_location_sensors_on_location_device(hass):
             f"{fuel}_off_peak_start",
             f"{fuel}_off_peak_end",
         )
-    } | {"warmup_location_loc1_tariff_type"}
+    } | {
+        f"warmup_location_loc1_{key}"
+        for key in (
+            "tariff_type",
+            "holiday_start",
+            "holiday_end",
+            "holiday_temperature",
+            "location_mode",
+        )
+    }
     assert all(
         entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         for entry in location_entries

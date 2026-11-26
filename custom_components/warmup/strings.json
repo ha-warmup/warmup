@@ -89,6 +89,44 @@
           "single": "Single",
           "dual": "Dual"
         }
+      },
+      "holiday_start": {
+        "name": "Holiday start"
+      },
+      "holiday_end": {
+        "name": "Holiday end"
+      },
+      "holiday_temperature": {
+        "name": "Holiday temperature"
+      },
+      "location_mode": {
+        "name": "Location mode",
+        "state": {
+          "geo": "Schedule (smart geo)",
+          "not_geo": "Schedule",
+          "off": "Off",
+          "frost": "Frost protection",
+          "holiday": "Holiday"
+        }
+      }
+    },
+    "binary_sensor": {
+      "holiday": {
+        "name": "Holiday"
+      }
+    },
+    "button": {
+      "all_rooms_frost": {
+        "name": "Frost protect all rooms"
+      },
+      "all_rooms_off": {
+        "name": "Turn off all rooms"
+      },
+      "all_rooms_schedule": {
+        "name": "Resume schedule in all rooms"
+      },
+      "cancel_all_overrides": {
+        "name": "Cancel all overrides"
       }
     }
   },
@@ -104,6 +142,63 @@
     },
     "unsupported_hvac_mode": {
       "message": "Warmup thermostats don't support the HVAC mode \"{hvac_mode}\"."
+    },
+    "not_a_location_device": {
+      "message": "Choose a Warmup location device."
+    },
+    "entry_not_loaded": {
+      "message": "The Warmup integration for this location isn't loaded."
+    },
+    "holiday_end_before_start": {
+      "message": "The holiday must end after it starts."
+    }
+  },
+  "services": {
+    "set_override": {
+      "name": "Set override",
+      "description": "Sets a temporary temperature for a room until a time of day, after which the room returns to its schedule.",
+      "fields": {
+        "temperature": {
+          "name": "Temperature",
+          "description": "Temperature to hold, in 0.5° steps."
+        },
+        "until": {
+          "name": "Until",
+          "description": "Time of day (HH:MM) the override ends. Defaults to 1 hour from now."
+        }
+      }
+    },
+    "set_holiday": {
+      "name": "Set holiday",
+      "description": "Puts every room at a Warmup location in holiday mode between two times.",
+      "fields": {
+        "device_id": {
+          "name": "Location",
+          "description": "The Warmup location device."
+        },
+        "start": {
+          "name": "Start",
+          "description": "When the holiday starts."
+        },
+        "end": {
+          "name": "End",
+          "description": "When the holiday ends."
+        },
+        "temperature": {
+          "name": "Temperature",
+          "description": "Temperature every room holds during the holiday."
+        }
+      }
+    },
+    "cancel_holiday": {
+      "name": "Cancel holiday",
+      "description": "Cancels holiday mode at a Warmup location. Rooms in frost protection also return to their schedule.",
+      "fields": {
+        "device_id": {
+          "name": "Location",
+          "description": "The Warmup location device."
+        }
+      }
     }
   }
 }

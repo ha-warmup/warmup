@@ -262,6 +262,15 @@ Each Warmup location is also a device, and each thermostat's device is connected
 
 Rates are per kWh, in Home Assistant's currency.
 
+The location device also has controls for every room at that location:
+
+* **Frost protect all rooms**, **Turn off all rooms** and **Resume schedule in all rooms** buttons. Resume schedule also moves rooms with a fixed temperature back to their schedule.
+* **Cancel all overrides** button.
+* **Holiday**: on while the location is in holiday mode. **Holiday start**, **Holiday end** and **Holiday temperature** sensors (disabled by default) show the holiday that's set.
+* **Location mode** sensor (disabled by default): Warmup's own mode for the location (Schedule, Schedule (smart geo), Off, Frost protection or Holiday). It reflects the last whole-location change, so it doesn't show a single room you've changed since.
+
+To set a holiday, use the `warmup.set_holiday` action with the location device, start and end times, and the temperature every room holds; `warmup.cancel_holiday` cancels it. Cancelling a holiday also returns rooms in frost protection to their schedule. Times are in Home Assistant's time zone, which should match the location's.
+
 For further information on versions please see the
 [CHANGELOG](https://github.com/ha-warmup/warmup/blob/master/CHANGELOG.md)
 

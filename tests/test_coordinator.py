@@ -262,3 +262,14 @@ async def test_away_and_off_act_on_one_room(hass):
     assert kitchen.commands == [("set_room_to_frost",), ("set_room_to_off",)]
     assert lounge.commands == []
     assert hass.states.get(lounge_id).state == HVACMode.AUTO
+
+
+async def test_off_shows_no_target_temperature(hass):
+    """A room that is off has no target temperature, not Warmup's 0 (#89)."""
+    device = _device(run_mode="off")
+    device.target_temperature = 0.0
+    _, (entity_id,) = await _setup(hass, device)
+
+    state = hass.states.get(entity_id)
+    assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_TEMPERATURE] is None

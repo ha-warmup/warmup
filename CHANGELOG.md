@@ -16,10 +16,15 @@ Recent features from development that have not been formally released yet:
 
 ### Fixed
 
+* A thermostat that is off shows no target temperature, instead of 0 (#89)
 * Turning a thermostat off, or setting its preset to away, now affects only that room; it used to switch off, or set to frost, every room at the location (#84)
 * Setting a temperature no longer logs that Warmup declined it when it was accepted, and switching to auto or heat no longer blanks the target temperature until the next update
 * A command Warmup rejects, or a lost connection while sending one, now shows an error in Home Assistant instead of only being logged
 * Errors for unsupported presets and HVAC modes are translated messages
+
+### Documented
+
+* README explains how Home Assistant's HVAC modes and presets map to Warmup's modes (#89)
 
 ## 2026.11.26 release
 

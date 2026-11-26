@@ -183,7 +183,7 @@ async def _setup_with_location_sensors_enabled(hass) -> None:
 
 
 async def test_location_sensors_on_location_device(hass):
-    """Each location's device gets the tariff sensors, all disabled by default."""
+    """Each location's device gets its sensors; only the tariff ones start disabled."""
     FakeWarmup4IE.tariffs = {"loc1": {"electricity": ELECTRICITY, "gas": GAS}}
     config_entry = await _setup(hass, _device())
 
@@ -214,10 +214,19 @@ async def test_location_sensors_on_location_device(hass):
             "location_mode",
         )
     }
-    assert all(
-        entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-        for entry in location_entries
-    )
+    enabled_by_default = {
+        "warmup_location_loc1_holiday_start",
+        "warmup_location_loc1_holiday_end",
+        "warmup_location_loc1_holiday_temperature",
+        "warmup_location_loc1_location_mode",
+    }
+    for entry in location_entries:
+        if entry.unique_id in enabled_by_default:
+            assert entry.disabled_by is None, entry.unique_id
+        else:
+            assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION, (
+                entry.unique_id
+            )
 
     device = dr.async_get(hass).async_get(location_entries[0].device_id)
     assert device.name == "Home"

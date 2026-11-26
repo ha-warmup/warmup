@@ -218,6 +218,7 @@ def _fuel_sensors(fuel: str) -> tuple[WarmupLocationSensorEntityDescription, ...
 
     return (
         WarmupLocationSensorEntityDescription(
+            entity_registry_enabled_default=False,
             key=f"{fuel}_rate",
             translation_key=f"{fuel}_rate",
             is_rate=True,
@@ -226,6 +227,7 @@ def _fuel_sensors(fuel: str) -> tuple[WarmupLocationSensorEntityDescription, ...
             ),
         ),
         WarmupLocationSensorEntityDescription(
+            entity_registry_enabled_default=False,
             key=f"{fuel}_standard_rate",
             translation_key=f"{fuel}_standard_rate",
             is_rate=True,
@@ -234,6 +236,7 @@ def _fuel_sensors(fuel: str) -> tuple[WarmupLocationSensorEntityDescription, ...
             ),
         ),
         WarmupLocationSensorEntityDescription(
+            entity_registry_enabled_default=False,
             key=f"{fuel}_off_peak_rate",
             translation_key=f"{fuel}_off_peak_rate",
             is_rate=True,
@@ -242,11 +245,13 @@ def _fuel_sensors(fuel: str) -> tuple[WarmupLocationSensorEntityDescription, ...
             ),
         ),
         WarmupLocationSensorEntityDescription(
+            entity_registry_enabled_default=False,
             key=f"{fuel}_off_peak_start",
             translation_key=f"{fuel}_off_peak_start",
             value_fn=lambda client, loc: _off_peak_time(tariff(client, loc), 0),
         ),
         WarmupLocationSensorEntityDescription(
+            entity_registry_enabled_default=False,
             key=f"{fuel}_off_peak_end",
             translation_key=f"{fuel}_off_peak_end",
             value_fn=lambda client, loc: _off_peak_time(tariff(client, loc), 1),
@@ -303,6 +308,7 @@ LOCATION_SENSORS: tuple[WarmupLocationSensorEntityDescription, ...] = (
     ),
     WarmupLocationSensorEntityDescription(
         key="tariff_type",
+        entity_registry_enabled_default=False,
         translation_key="tariff_type",
         device_class=SensorDeviceClass.ENUM,
         options=["single", "dual"],
@@ -315,7 +321,6 @@ class WarmupLocationSensor(WarmupLocationEntity, SensorEntity):
     """A tariff, holiday or mode detail for a Warmup location."""
 
     entity_description: WarmupLocationSensorEntityDescription
-    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,

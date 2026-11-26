@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from .common import FakeWarmup4IE
+from .common import FakeWarmup4IE, FakeWarmup4IEDevice
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
@@ -24,6 +24,7 @@ def reset_fake_warmup4ie():
     FakeWarmup4IE.rejected_updates = 0
     FakeWarmup4IE.tariffs = {}
     FakeWarmup4IE.tariff_types = {}
+    FakeWarmup4IEDevice.command_error = None
     FakeWarmup4IE.relogin_should_succeed = True
     FakeWarmup4IE.relogin_count = 0
     yield
@@ -33,6 +34,7 @@ def reset_fake_warmup4ie():
     FakeWarmup4IE.rejected_updates = 0
     FakeWarmup4IE.tariffs = {}
     FakeWarmup4IE.tariff_types = {}
+    FakeWarmup4IEDevice.command_error = None
     FakeWarmup4IE.relogin_should_succeed = True
     FakeWarmup4IE.relogin_count = 0
 

@@ -6,7 +6,9 @@ from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
+    PRESET_BOOST,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACAction,
     HVACMode,
@@ -19,12 +21,22 @@ from homeassistant.const import (
     CONF_USERNAME,
     STATE_UNAVAILABLE,
 )
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+import requests
 
 from custom_components.warmup.const import DOMAIN
+from custom_components.warmup.warmup4ie import WarmupCommandError
 
-from .common import TEST_PASSWORD, TEST_USERNAME, FakeWarmup4IE, make_device
+from .common import (
+    TEST_PASSWORD,
+    TEST_USERNAME,
+    FakeWarmup4IE,
+    FakeWarmup4IEDevice,
+    make_device,
+)
 
 
 async def _setup(hass, *devices):
@@ -174,3 +186,54 @@ async def test_set_override_action(hass):
     await hass.async_block_till_done()
 
     assert device.commands == [("set_override", 22.0, "18:30")]
+
+
+async def test_rejected_command_raises_translated_error(hass):
+    """A command Warmup rejects raises a translated error and refreshes the state."""
+    device = _device()
+    _, (entity_id,) = await _setup(hass, device)
+    FakeWarmup4IEDevice.command_error = WarmupCommandError("Setting room 1 to fixed")
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 23.5},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "command_failed"
+    assert excinfo.value.translation_domain == DOMAIN
+    assert hass.states.get(entity_id).attributes[ATTR_TEMPERATURE] == 21.0
+
+
+async def test_connection_error_on_command(hass):
+    """A network error while sending a command raises a translated error."""
+    device = _device()
+    _, (entity_id,) = await _setup(hass, device)
+    FakeWarmup4IEDevice.command_error = requests.exceptions.ConnectionError("down")
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "cannot_connect"
+
+
+async def test_unsupported_preset_raises_validation_error(hass):
+    """A preset the integration offers but can't set raises a validation error."""
+    _, (entity_id,) = await _setup(hass, _device())
+
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_BOOST},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "unsupported_preset_mode"

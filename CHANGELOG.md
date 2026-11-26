@@ -16,6 +16,8 @@ Recent features from development that have not been formally released yet:
 
 ### Added
 
+* Boost preset: overrides the room's temperature at its override temperature for the boost duration, 1 hour by default and set in the integration's options; a running override shows as Boost, and Home ends it
+* `warmup.set_override` takes a `duration` as well as `until`, defaults to 1 hour, and accepts the temperature in Home Assistant's unit (#39, #48)
 * Controls for every room at a location, on the location's device: Frost protect all rooms, Turn off all rooms, Resume schedule in all rooms and Cancel all overrides buttons
 * Holiday mode: `warmup.set_holiday` and `warmup.cancel_holiday` actions, a Holiday binary sensor, and Holiday start, end and temperature sensors
 * Location mode sensor showing Warmup's mode for the location
@@ -23,7 +25,7 @@ Recent features from development that have not been formally released yet:
 
 ### Fixed
 
-* The boost preset is no longer offered: Warmup has no boost mode, and choosing it raised an error. Use `warmup.set_override` for a temporary temperature
+* `warmup.set_override` with `until` written as an unquoted time such as 23:59, which YAML reads as a number, sets the intended time
 * A thermostat that is off shows no target temperature, instead of 0 (#89)
 * Turning a thermostat off, or setting its preset to away, now affects only that room; it used to switch off, or set to frost, every room at the location (#84)
 * Setting a temperature no longer logs that Warmup declined it when it was accepted, and switching to auto or heat no longer blanks the target temperature until the next update

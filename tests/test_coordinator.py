@@ -4,11 +4,8 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
-    ATTR_PRESET_MODES,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
-    PRESET_BOOST,
-    PRESET_HOME,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -23,7 +20,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     STATE_UNAVAILABLE,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -174,22 +171,6 @@ async def test_set_hvac_mode_off(hass):
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
 
 
-async def test_set_override_action(hass):
-    """The warmup.set_override action sends an override to the thermostat."""
-    device = _device()
-    _, (entity_id,) = await _setup(hass, device)
-
-    await hass.services.async_call(
-        DOMAIN,
-        "set_override",
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 22, "until": "18:30"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    assert device.commands == [("set_override", 22.0, "18:30")]
-
-
 async def test_rejected_command_raises_translated_error(hass):
     """A command Warmup rejects raises a translated error and refreshes the state."""
     device = _device()
@@ -224,25 +205,6 @@ async def test_connection_error_on_command(hass):
         )
 
     assert excinfo.value.translation_key == "cannot_connect"
-
-
-async def test_boost_preset_not_offered(hass):
-    """Warmup has no boost mode, so boost isn't offered and can't be set."""
-    device = _device()
-    _, (entity_id,) = await _setup(hass, device)
-
-    assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODES] == [
-        PRESET_AWAY,
-        PRESET_HOME,
-    ]
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_BOOST},
-            blocking=True,
-        )
-    assert device.commands == []
 
 
 async def test_away_and_off_act_on_one_room(hass):

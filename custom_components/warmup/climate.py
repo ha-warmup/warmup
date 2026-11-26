@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 import logging
+import math
 from typing import Any
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     PRESET_AWAY,
+    PRESET_BOOST,
     PRESET_HOME,
     ClimateEntityFeature,
     HVACAction,
@@ -29,10 +31,12 @@ from homeassistant.helpers import entity_platform, issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import TemperatureConverter
 import voluptuous as vol
 
 from . import WarmupConfigEntry
-from .const import DOMAIN
+from .const import CONF_BOOST_DURATION, DEFAULT_BOOST_DURATION, DOMAIN
 from .coordinator import WarmupCoordinator
 from .entity import WarmupEntity, async_run_command
 
@@ -42,6 +46,9 @@ from .entity import WarmupEntity, async_run_command
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_UNTIL = "until"
+ATTR_DURATION = "duration"
+MAX_OVERRIDE_MINUTES = 1440
+UNTIL_OR_DURATION = "Use either until or duration, not both"
 
 CONF_LOCATION = "location"
 CONF_TARGET_TEMP = "target_temp"
@@ -54,6 +61,7 @@ CONST_MODE_FIXED = "fixed"  # Fixed temperature mode (treated as Home/Heat)
 CONST_MODE_AWAY = "away"  # WarmUp Geo Away or Holiday Mode (treated as Away/Auto)
 CONST_MODE_FROST = "frost"  # Frost Mode (treated as Away/Heat)
 CONST_MODE_OFF = "off"  # Switch off heating in a zone
+CONST_MODE_OVERRIDE = "override"  # Temporary override, then back to the schedule
 
 HVAC_MAP_WARMUP_HEAT = {
     CONST_MODE_PROGRAM: HVACMode.AUTO,
@@ -70,7 +78,7 @@ SUPPORT_FLAGS = (
     | ClimateEntityFeature.TURN_OFF
 )
 SUPPORT_HVAC_HEAT = [HVACMode.HEAT, HVACMode.AUTO, HVACMode.OFF]
-SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME]
+SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME, PRESET_BOOST]
 
 # Kept only so that users who still have `climate: - platform: warmup`
 # in configuration.yaml don't get a broken config on upgrade. The platform
@@ -82,10 +90,50 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 SERVICE_SET_OVERRIDE = "set_override"
+
+
+def _until(value: Any) -> time:
+    """Validate the time of day an override ends.
+
+    YAML reads an unquoted time such as 23:59 as a number of minutes (1439),
+    so accept that too.
+    """
+    if isinstance(value, int) and not isinstance(value, bool):
+        return time(value // 60 % 24, value % 60)
+    return cv.time(value)
+
+
 SERVICE_SET_OVERRIDE_SCHEMA = {
     vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
-    vol.Optional(ATTR_UNTIL): cv.string,
+    vol.Exclusive(ATTR_UNTIL, "end", msg=UNTIL_OR_DURATION): _until,
+    vol.Exclusive(ATTR_DURATION, "end", msg=UNTIL_OR_DURATION): cv.positive_time_period,
 }
+
+
+def override_minutes(
+    until: time | None, duration: timedelta | None, now: datetime
+) -> int:
+    """Return how many minutes an override lasts.
+
+    Until a time of day (the next time it occurs), for a duration, or by
+    default for an hour. Warmup accepts 1 to 1440 minutes.
+    """
+    if duration is not None:
+        minutes = math.ceil(duration.total_seconds() / 60)
+    elif until is not None:
+        end = now.replace(hour=until.hour, minute=until.minute, second=0, microsecond=0)
+        if end <= now:
+            end += timedelta(days=1)
+        minutes = math.ceil((end - now).total_seconds() / 60)
+    else:
+        minutes = DEFAULT_BOOST_DURATION
+    if not 1 <= minutes <= MAX_OVERRIDE_MINUTES:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="override_duration_invalid",
+            translation_placeholders={"minutes": str(minutes)},
+        )
+    return minutes
 
 
 async def async_setup_platform(
@@ -216,7 +264,9 @@ class WarmupThermostat(WarmupEntity, ClimateEntity):
 
     @property
     def preset_mode(self) -> str:
-        """Return the current preset mode, e.g., home, away, temp."""
+        """Return the current preset mode: boost, away or home."""
+        if self._device.run_mode == CONST_MODE_OVERRIDE:
+            return PRESET_BOOST
         if self._is_away:
             return PRESET_AWAY
         return PRESET_HOME
@@ -251,6 +301,15 @@ class WarmupThermostat(WarmupEntity, ClimateEntity):
             await self._async_send(self._device.set_temperature_to_auto)
         elif preset_mode == PRESET_AWAY:
             await self._async_send(self._device.set_room_to_frost)
+        elif preset_mode == PRESET_BOOST:
+            device = self._device
+            # Warmup remembers the room's last override temperature; the
+            # Warmup app offers it for a new override too.
+            temperature = device.override_temperature or device.comfort_temperature
+            minutes = self.coordinator.config_entry.options.get(
+                CONF_BOOST_DURATION, DEFAULT_BOOST_DURATION
+            )
+            await self._async_send(device.set_override, temperature, minutes)
         else:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -289,9 +348,20 @@ class WarmupThermostat(WarmupEntity, ClimateEntity):
         await self.async_set_hvac_mode(HVACMode.OFF)
 
     async def async_set_override(
-        self, temperature: float, until: str | None = None
+        self,
+        temperature: float,
+        until: time | None = None,
+        duration: timedelta | None = None,
     ) -> None:
-        """Set a temperature override for this thermostat."""
-        if until is None:
-            until = (datetime.now() + timedelta(hours=1)).strftime("%H:%M")
-        await self._async_send(self._device.set_override, temperature, until)
+        """Override the room's temperature until a time of day or for a duration.
+
+        The temperature is in Home Assistant's unit. Without until or duration,
+        the override lasts an hour.
+        """
+        minutes = override_minutes(until, duration, dt_util.now())
+        celsius = TemperatureConverter.convert(
+            temperature,
+            self.hass.config.units.temperature_unit,
+            UnitOfTemperature.CELSIUS,
+        )
+        await self._async_send(self._device.set_override, celsius, minutes)

@@ -151,12 +151,15 @@
     },
     "holiday_end_before_start": {
       "message": "The holiday must end after it starts."
+    },
+    "override_duration_invalid": {
+      "message": "An override must last between 1 minute and 24 hours; this one would last {minutes} minutes."
     }
   },
   "services": {
     "set_override": {
       "name": "Set override",
-      "description": "Sets a temporary temperature for a room until a time of day, after which the room returns to its schedule.",
+      "description": "Sets a temporary temperature for a room until a time of day or for a duration (1 hour if neither is given), after which the room returns to its schedule.",
       "fields": {
         "temperature": {
           "name": "Temperature",
@@ -164,7 +167,11 @@
         },
         "until": {
           "name": "Until",
-          "description": "Time of day (HH:MM) the override ends. Defaults to 1 hour from now."
+          "description": "Time of day the override ends. Use either this or duration."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "How long the override lasts, up to 24 hours. Use either this or until."
         }
       }
     },
@@ -197,6 +204,19 @@
         "device_id": {
           "name": "Location",
           "description": "The Warmup location device."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Warmup options",
+        "data": {
+          "boost_duration": "Boost duration"
+        },
+        "data_description": {
+          "boost_duration": "How long the Boost preset overrides a room's temperature, in minutes (1 to 1440)."
         }
       }
     }

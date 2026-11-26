@@ -62,10 +62,11 @@ class FakeWarmup4IEDevice(Warmup4IEDevice):
         self.commands.append(("set_location_to_off",))
         self.run_mode = "off"
 
-    def set_override(self, temperature, until):
+    def set_override(self, temperature, minutes):
         self._check_command()
-        self.commands.append(("set_override", temperature, until))
+        self.commands.append(("set_override", temperature, minutes))
         self.run_mode = "override"
+        self.override_temperature = temperature
 
 
 def make_device(serial="SN123", room_name="Kitchen") -> FakeWarmup4IEDevice:

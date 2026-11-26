@@ -131,3 +131,18 @@ def test_location_mutation(mock_post, method, args, query):
     getattr(_client(), method)(*args)
 
     assert mock_post.call_args.kwargs["json"] == {"query": query}
+
+
+@patch(PATCH_POST)
+def test_room_override(mock_post):
+    """An override for one room sends deviceOverride with tenths and minutes."""
+    mock_post.return_value = _make_response(
+        200, {"status": "success", "data": {"deviceOverride": True}}
+    )
+
+    _client().set_room_override(20595, 39768, 21.5, 90)
+
+    assert mock_post.call_args.kwargs["json"] == {
+        "query": "mutation { deviceOverride(lid: 20595, rid: 39768, "
+        "temperature: 215, minutes: 90) }"
+    }

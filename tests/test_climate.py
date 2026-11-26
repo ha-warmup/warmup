@@ -34,7 +34,7 @@ async def test_setup_entry_creates_expected_unique_ids(hass):
 
     entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    unique_ids = {e.unique_id for e in entries}
+    unique_ids = {e.unique_id for e in entries if e.domain == "climate"}
 
     assert unique_ids == {"warmup_AAA111", "warmup_BBB222"}
 

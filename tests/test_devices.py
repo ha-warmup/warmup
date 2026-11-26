@@ -66,3 +66,47 @@ async def test_existing_entity_keeps_entity_id(hass):
     updated = registry.async_get(existing.entity_id)
     assert updated.entity_id == existing.entity_id
     assert updated.device_id is not None
+
+
+async def test_thermostat_linked_to_location_device(hass):
+    """Each thermostat's device is connected via its location's device."""
+    FakeWarmup4IE.devices = [make_device(serial="AAA111", room_name="Kitchen")]
+
+    entry = await _setup(hass)
+
+    registry = dr.async_get(hass)
+    location = registry.async_get_device_by_identifier(
+        (DOMAIN, "location_loc1"), entry.entry_id
+    )
+    assert location is not None
+    assert location.name == "Home"
+    assert location.model == "Location"
+
+    thermostat = registry.async_get_device_by_identifier(
+        (DOMAIN, "AAA111"), entry.entry_id
+    )
+    assert thermostat.via_device_id == location.id
+
+
+async def test_existing_thermostat_device_gets_linked(hass):
+    """A thermostat device registered before locations existed is linked on setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_USERNAME.lower(),
+        data={CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    registry = dr.async_get(hass)
+    existing = registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(DOMAIN, "AAA111")}, name="Kitchen"
+    )
+    assert existing.via_device_id is None
+    FakeWarmup4IE.devices = [make_device(serial="AAA111", room_name="Kitchen")]
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    location = registry.async_get_device_by_identifier(
+        (DOMAIN, "location_loc1"), entry.entry_id
+    )
+    assert registry.async_get(existing.id).via_device_id == location.id

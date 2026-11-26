@@ -222,6 +222,24 @@ temperature plus other values from the thermostat and setting the target
 temperature, switching between manual, automatic and frost protection
 mode, switching the device off, and setting a temporary override.
 
+Each thermostat is a device in Home Assistant with a climate entity and these sensors:
+
+* **Floor temperature** and **Floor temperature 2**: the floor probes. Floor temperature 2 starts disabled when the thermostat has no second probe connected; enable it in the device page if you add one.
+* **Air temperature**
+* **Energy today** (kWh): resets at midnight, and can be added to the Energy dashboard.
+* **Cost today**: today's energy at the tariff set in the Warmup app, in Home Assistant's currency. Disabled by default; enable it from the device page.
+
+A sensor whose probe the thermostat reports as faulty, usually because none is connected, is unavailable.
+
+Each Warmup location is also a device, and each thermostat's device is connected via it. The location device has sensors for the tariffs set in the Warmup app, all disabled by default:
+
+* **Electricity rate** and **Gas rate**: the rate per kWh that applies now, which is the off-peak rate during its hours and the standard rate otherwise. You can use these as the current-price entity in the Energy dashboard.
+* **Electricity standard rate**, **Electricity off-peak rate**, **Gas standard rate** and **Gas off-peak rate**
+* **Electricity off-peak start** and **end**, **Gas off-peak start** and **end** (HH:MM)
+* **Tariff type**: single or dual
+
+Rates are per kWh, in Home Assistant's currency.
+
 For further information on versions please see the
 [CHANGELOG](https://github.com/ha-warmup/warmup/blob/master/CHANGELOG.md)
 

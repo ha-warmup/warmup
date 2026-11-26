@@ -42,6 +42,8 @@ class WarmupCoordinator(DataUpdateCoordinator[dict[str, Warmup4IEDevice]]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
+        # Device registry id of each Warmup location's device, by location id.
+        self.location_device_ids: dict[int, str] = {}
 
     async def _async_update_data(self) -> dict[str, Warmup4IEDevice]:
         """Fetch the latest state of every thermostat."""

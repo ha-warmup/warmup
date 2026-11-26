@@ -35,5 +35,61 @@
       "title": "Warmup YAML configuration is deprecated",
       "description": "Configuring Warmup ({username}) via `climate:` in `configuration.yaml` is deprecated and has been automatically imported as a config entry. Remove the `platform: warmup` entry for {username} from your `configuration.yaml` and restart Home Assistant."
     }
+  },
+  "entity": {
+    "sensor": {
+      "floor_temperature": {
+        "name": "Floor temperature"
+      },
+      "floor_temperature_2": {
+        "name": "Floor temperature 2"
+      },
+      "air_temperature": {
+        "name": "Air temperature"
+      },
+      "energy_today": {
+        "name": "Energy today"
+      },
+      "cost_today": {
+        "name": "Cost today"
+      },
+      "electricity_rate": {
+        "name": "Electricity rate"
+      },
+      "electricity_standard_rate": {
+        "name": "Electricity standard rate"
+      },
+      "electricity_off_peak_rate": {
+        "name": "Electricity off-peak rate"
+      },
+      "electricity_off_peak_start": {
+        "name": "Electricity off-peak start"
+      },
+      "electricity_off_peak_end": {
+        "name": "Electricity off-peak end"
+      },
+      "gas_rate": {
+        "name": "Gas rate"
+      },
+      "gas_standard_rate": {
+        "name": "Gas standard rate"
+      },
+      "gas_off_peak_rate": {
+        "name": "Gas off-peak rate"
+      },
+      "gas_off_peak_start": {
+        "name": "Gas off-peak start"
+      },
+      "gas_off_peak_end": {
+        "name": "Gas off-peak end"
+      },
+      "tariff_type": {
+        "name": "Tariff type",
+        "state": {
+          "single": "Single",
+          "dual": "Dual"
+        }
+      }
+    }
   }
 }

@@ -28,16 +28,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import InvalidStateError
 from homeassistant.helpers import entity_platform, issue_registry as ir
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import voluptuous as vol
 
 from . import WarmupConfigEntry
 from .const import DOMAIN
 from .coordinator import WarmupCoordinator
-from .warmup4ie import Warmup4IEDevice
+from .entity import WarmupEntity
 
 """ temperature utility will stop working in HA 2023.4. Removed it for now, as CELCIUS is the only temperature standard this module supports anyway. """
 # from homeassistant.util.temperature import convert as convert_temperature
@@ -147,10 +145,9 @@ async def async_setup_entry(
     )
 
 
-class WarmupThermostat(CoordinatorEntity[WarmupCoordinator], ClimateEntity):
+class WarmupThermostat(WarmupEntity, ClimateEntity):
     """Representation of a Warmup thermostat."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_hvac_modes = SUPPORT_HVAC_HEAT
     _attr_preset_modes = SUPPORT_PRESET
@@ -160,32 +157,8 @@ class WarmupThermostat(CoordinatorEntity[WarmupCoordinator], ClimateEntity):
 
     def __init__(self, coordinator: WarmupCoordinator, serial: str) -> None:
         """Initialize the climate device."""
-        super().__init__(coordinator)
-        self._serial = serial
+        super().__init__(coordinator, serial)
         self._attr_unique_id = "warmup_" + serial
-        device = self._device
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial)},
-            manufacturer="Warmup",
-            model=device.model.upper() if device.model else None,
-            name=device.get_room_name(),
-            serial_number=serial,
-            sw_version=device.firmware_version,
-        )
-
-    @property
-    def _device(self) -> Warmup4IEDevice:
-        """Return the latest data for this thermostat."""
-        return self.coordinator.data[self._serial]
-
-    @property
-    def available(self) -> bool:
-        """Return whether the thermostat is reachable."""
-        return (
-            super().available
-            and self._serial in self.coordinator.data
-            and not self._device.is_unavailable
-        )
 
     @property
     def _is_off(self) -> bool:

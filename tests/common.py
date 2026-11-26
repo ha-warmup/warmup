@@ -72,6 +72,9 @@ class FakeWarmup4IE(Warmup4IE):
     raise_connection_error = False
     # Number of upcoming update_all_devices calls that are rejected (as when
     # the access token has expired), and the result of logging in again.
+    # Location id -> {fuel: tariff dict}, and location id -> tariff type.
+    tariffs = {}
+    tariff_types = {}
     rejected_updates = 0
     relogin_should_succeed = True
     relogin_count = 0
@@ -86,6 +89,8 @@ class FakeWarmup4IE(Warmup4IE):
 
         self.setup_finished = False
         self._locations = {}
+        self._location_tariffs = FakeWarmup4IE.tariffs
+        self._location_tariff_types = FakeWarmup4IE.tariff_types
         self._rooms = {}
         self._all_devices = {}
         for device in getattr(FakeWarmup4IE, "devices", []):

@@ -89,6 +89,8 @@ class Warmup4IE:
         self.setup_finished = False
         token_ok = self.connect()
         self._locations = {}
+        self._location_tariffs = {}
+        self._location_tariff_types = {}
         self._rooms = {}
         self._all_devices = {}
         self.update_all_devices()
@@ -201,6 +203,19 @@ class Warmup4IE:
     def get_all_devices(self):
         return self._all_devices
 
+    def get_location_tariff(self, location_id, fuel):
+        """Return the location's tariff for a fuel ("electricity" or "gas").
+
+        A dict with ``cost`` (standard rate per kWh), ``low`` (cheaper rate per
+        kWh, empty if none) and ``start``/``end`` (HH:MM window for the cheaper
+        rate), or None if the location has no tariff for that fuel.
+        """
+        return (self._location_tariffs.get(location_id) or {}).get(fuel)
+
+    def get_location_tariff_type(self, location_id):
+        """Return the location's tariff type: "single" or "dual"."""
+        return self._location_tariff_types.get(location_id)
+
     def get_location_id(self, location_name):
         for l_id, l_name in self._locations.items():
             if l_name == location_name:
@@ -241,6 +256,9 @@ class Warmup4IE:
             "allLocations: locations { "
             "id "
             "name "
+            "tariffType "
+            "electricity { cost low start end } "
+            "gas { cost low start end } "
             "rooms{ "
             "id "
             "roomName "
@@ -263,6 +281,9 @@ class Warmup4IE:
             "deviceSN "
             "type "
             "appFw "
+            "isFaultAir "
+            "isFaultFloor1 "
+            "isFaultFloor2 "
             "minTemp "
             "maxTemp "
             "airTemp "
@@ -286,6 +307,11 @@ class Warmup4IE:
 
         for location in locations:
             self._locations[location["id"]] = location["name"]
+            self._location_tariffs[location["id"]] = {
+                "electricity": location.get("electricity"),
+                "gas": location.get("gas"),
+            }
+            self._location_tariff_types[location["id"]] = location.get("tariffType")
             for room in location["rooms"]:
                 self._rooms[room["id"]] = room["roomName"]
                 for thermostat in room["thermostat4ies"]:
@@ -482,6 +508,9 @@ class Warmup4IEDevice:
         self.is_unavailable = False
         self.model = None
         self.firmware_version = None
+        self.is_fault_air = False
+        self.is_fault_floor_1 = False
+        self.is_fault_floor_2 = False
 
     def get_run_mode(self):
         """return current mode, e.g. 'off', 'fixed', 'prog'."""
@@ -510,6 +539,9 @@ class Warmup4IEDevice:
         self.is_unavailable = bool(room.get("isUnavailable"))
         self.model = thermostat.get("type")
         self.firmware_version = thermostat.get("appFw")
+        self.is_fault_air = bool(thermostat.get("isFaultAir"))
+        self.is_fault_floor_1 = bool(thermostat.get("isFaultFloor1"))
+        self.is_fault_floor_2 = bool(thermostat.get("isFaultFloor2"))
 
     def get_target_temperature(self):
         """return target temperature"""

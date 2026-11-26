@@ -14,9 +14,15 @@ set_override:
           step: 0.5
           mode: box
     until:
-      example: "14:00"
+      example: "14:00:00"
       selector:
-        text:
+        time:
+    duration:
+      example:
+        hours: 1
+        minutes: 30
+      selector:
+        duration:
 set_holiday:
   fields:
     device_id:

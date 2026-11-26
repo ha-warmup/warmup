@@ -5,12 +5,23 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfTime
+from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 import requests
 import voluptuous as vol
 
-from .const import DOMAIN
+from .const import CONF_BOOST_DURATION, DEFAULT_BOOST_DURATION, DOMAIN
 from .warmup4ie import Warmup4IE
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +53,12 @@ class WarmupConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Warmup."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Return the options flow."""
+        return WarmupOptionsFlow()
 
     async def _async_try_login(self, username: str, password: str) -> dict[str, str]:
         """Attempt a login and return a dict of errors (empty if none)."""
@@ -136,4 +153,40 @@ class WarmupConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
             description_placeholders={CONF_USERNAME: username},
+        )
+
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(
+            CONF_BOOST_DURATION, default=DEFAULT_BOOST_DURATION
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=1,
+                max=1440,
+                step=1,
+                mode=NumberSelectorMode.BOX,
+                unit_of_measurement=UnitOfTime.MINUTES,
+            )
+        ),
+    }
+)
+
+
+class WarmupOptionsFlow(OptionsFlow):
+    """Handle Warmup options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                data={CONF_BOOST_DURATION: int(user_input[CONF_BOOST_DURATION])}
+            )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
         )

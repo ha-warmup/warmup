@@ -180,9 +180,25 @@ Each thermostat's climate entity maps Warmup's modes to Home Assistant's:
 | HVAC mode **Heat** | Fixed | Holds a fixed temperature. Setting a temperature switches the room to Heat |
 | HVAC mode **Off** | Off | Doesn't heat. No target temperature is shown |
 | Preset **Away** | Frost protection | Heats only enough to prevent frost. Shown with HVAC mode Heat |
-| Preset **Home** | Program (schedule) | Leaves away: the room follows its schedule again |
+| Preset **Boost** | Override | Holds the room's override temperature for the boost duration (1 hour by default), then returns to the schedule |
+| Preset **Home** | Program (schedule) | Leaves away or boost: the room follows its schedule again |
 
-Off and Away apply to that room only. The `warmup.set_override` action sets a temporary temperature until a time of day, after which the room goes back to its schedule.
+Off, Away and Boost apply to that room only.
+
+Boost uses the room's override temperature, the last temperature an override used in that room (from the Warmup app, a boost or the action below), which the Warmup app also offers for a new override. To change how long a boost lasts, open **Settings -> Devices & Services -> Warmup -> Configure** and set **Boost duration** (1 to 1440 minutes).
+
+The `warmup.set_override` action overrides a room's temperature for a `duration`, or `until` a time of day (the next time it occurs), up to 24 hours; with neither it lasts 1 hour. The temperature is in Home Assistant's unit. After the override the room goes back to its schedule.
+
+```yaml
+action: warmup.set_override
+target:
+  entity_id: climate.kitchen
+data:
+  temperature: 22
+  duration:
+    hours: 1
+    minutes: 30
+```
 
 ### Add your devices to the dashboard
 

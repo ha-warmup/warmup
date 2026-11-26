@@ -386,18 +386,6 @@ class Warmup4IE:
             )
         _LOGGER.debug("%s: succeeded, response '%s'", description, response.text)
 
-    def set_override(self, room_id, temperature, until):
-        self._send_command(
-            f"Setting an override of {temperature} until {until} in room {room_id}",
-            {
-                "method": "setOverride",
-                "rooms": [room_id],
-                "temp": f"{int(temperature * 10):03d}",
-                "until": until,
-                "type": 3,
-            },
-        )
-
     def _set_location_mode(self, location_id, location_mode):
         self._send_command(
             f"Setting location {location_id} to {location_mode}",
@@ -515,6 +503,23 @@ class Warmup4IE:
             f"Cancelling all overrides at location {location_id}",
             "cancelAllOverrides",
             {"lid": int(location_id)},
+        )
+
+    def set_room_override(self, location_id, room_id, temperature, minutes):
+        """Override one room's temperature for a number of minutes (1 to 1440).
+
+        ``temperature`` is in degrees Celsius. The room returns to its schedule
+        when the override ends.
+        """
+        self._send_mutation(
+            f"Overriding room {room_id} at {temperature} for {minutes} minutes",
+            "deviceOverride",
+            {
+                "lid": int(location_id),
+                "rid": int(room_id),
+                "temperature": int(round(temperature * 10)),
+                "minutes": int(minutes),
+            },
         )
 
     def set_room_to_off(self, location_id, room_id):
@@ -749,6 +754,8 @@ class Warmup4IEDevice:
         """Turn off the room's whole location."""
         self._warmup4ie_account.set_location_to_off(self._loc_id)
 
-    def set_override(self, temperature, until):
-        """Override the room's temperature until a time of day."""
-        self._warmup4ie_account.set_override(self._room_id, temperature, until)
+    def set_override(self, temperature, minutes):
+        """Override the room's temperature (Celsius) for a number of minutes."""
+        self._warmup4ie_account.set_room_override(
+            self._loc_id, self._room_id, temperature, minutes
+        )

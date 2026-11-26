@@ -35,6 +35,7 @@ Recent features from development that have not been formally released yet:
 
 ### Documented
 
+* CONTRIBUTING describes testing with the Home Assistant Marketplace: pre-releases, installing a specific version, and installing a branch
 * `LICENSE` is now the plain-text Apache 2.0 licence (was `LICENSE.md`), so GitHub and HACS validation recognise it
 
 

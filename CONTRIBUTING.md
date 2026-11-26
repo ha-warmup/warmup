@@ -19,40 +19,39 @@ In ascending order of complexity, here are ways you can get involved with this p
 
 ## Beta
 
-If you are willing to help us test new features, 
-before they are put on general release, 
-you can set your HACS Integration (re-)download settings 
-to `show beta versions`.
+If you are willing to help us test new features before they are put on general release, turn on pre-releases for Warmup in the Home Assistant Marketplace (Home Assistant 2026.11 or later):
 
-![download-show-beta](docs/images/download-show-beta.png)
+1. Go to **Settings -> Devices & services -> Marketplace** and open the Warmup repository's device page.
+2. The **Pre-release** entity is disabled by default: enable it, then turn on the switch.
+
+The Marketplace then offers Warmup's pre-releases as updates. To install a particular release, open the repository page, select the three dots menu, and choose **Install another version**, or call the `update.install` action with that version:
+
+```yaml
+action: update.install
+data:
+  version: v2026.11.26
+target:
+  entity_id: update.warmup_under_floor_heating_integration_update
+```
+
+To go back to an earlier version after an update, restore a backup rather than installing the older version.
 
 Please report any failure with specific messages or circumstance, in the relevant issue ticket. If you get none, then please report your success, so that we know we are closer to promoting the fix towards the main live release.
 
 ## Alpha testing
 
-If you are suffering with a specific issue yourself, or are just happy to get involved in earlier testing, you can obtain earlier releases of code in different ways, depending on your setup.
+If you are suffering with a specific issue yourself, or are just happy to get involved in earlier testing, you can install code from a branch before it is released.
 
-Let's suppose that someone has submitted a Pull Request (PR) for a branch called `fix232_v2`, here are a couple of methods.
+Let's suppose that someone has submitted a Pull Request (PR) for a branch called `fix232_v2`. The Marketplace only installs releases, so copy the branch's `custom_components/warmup` folder into your Home Assistant **config** folder, replacing the installed one, and restart Home Assistant. For example, from the [Terminal & SSH app](https://www.home-assistant.io/common-tasks/os/#installing-and-using-the-ssh-app) or a shell in your config folder:
 
-#### Alternative manual install
-
-If you installed your set up manually, you can use the [alternative manual install method](https://github.com/ha-warmup/warmup?tab=readme-ov-file#alternative-versions) specifying the branch, e.g. 
-
-```
+```sh
 git clone -b fix232_v2 https://github.com/ha-warmup/warmup.git /tmp/warmup
+rm -r custom_components/warmup
+cp -r /tmp/warmup/custom_components/warmup custom_components/warmup
+rm -rf /tmp/warmup
 ```
 
-#### HACS install.service
-
-You can install a specific branch on HASOS / HACS by calling the update.install service
-
-```
-service: update.install
-data:
-  version: fix232_v2
-target:
-  entity_id: update.warmup_under_floor_heating_integration_update
-```
+Afterwards, reinstall the released version from the Marketplace (**Install another version**) to go back.
 
 ## Development
 
@@ -62,7 +61,7 @@ For the time being, contributors have settled on a
 [project structure](https://github.com/ha-warmup/warmup/issues/50) 
 that includes:
 
-* HACS integration as a custom repository, with associated metadata files
+* a repository the Home Assistant Marketplace (and HACS, before Home Assistant 2026.11) can install, with associated metadata files
 * Instructions for manual install as custom_component
 * incorporating any changes to the API-related python code in warmup4ie subfolder
 	* and keeping a tracking copy in the root warmup4ie-PyPi folder for later
@@ -143,7 +142,7 @@ Please be clear if this is a Production release.
 Otherwise, when the Release is created 
 it should be marked as a Pre-release. 
 That way it will only be available to users who 
-have selected the option 'show beta versions'. 
+have turned on the **Pre-release** switch for Warmup in the Marketplace (see [Beta](#beta)).
 
 When community testing shows that a Prerelease is ready for mainstream use:
 * in the main ha-warmup repository, go into [Code / Tags / Releases](https://github.com/ha-warmup/warmup/releases)
@@ -152,4 +151,4 @@ When community testing shows that a Prerelease is ready for mainstream use:
 * uncheck the box `Set as a pre-release`
 * check the box `Set as the latest release`
 * click Update Release
-This should make that the target of https://github.com/ha-warmup/warmup/releases/latest and therefore the version that most HACS users will be updated to.
+This should make that the target of https://github.com/ha-warmup/warmup/releases/latest and therefore the version that most users will be updated to.

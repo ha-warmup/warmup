@@ -160,62 +160,109 @@ async def test_missing_energy_value(hass):
     assert hass.states.get(_entity_id(hass, "energy_today")).state == "unknown"
 
 
-TARIFF_ENTITY_UNIQUE_ID = "warmup_location_loc1_tariff"
+ELECTRICITY = {"cost": "0.24", "low": "0.07", "start": "00:30", "end": "04:30"}
+GAS = {"cost": "0.06", "low": "", "start": "00:00", "end": "00:00"}
 
 
-async def _enable_tariff(hass, config_entry) -> str:
-    registry = er.async_get(hass)
-    entity_id = registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, TARIFF_ENTITY_UNIQUE_ID
+def _location_entity_id(hass, key: str) -> str:
+    return er.async_get(hass).async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"warmup_location_loc1_{key}"
     )
-    registry.async_update_entity(entity_id, disabled_by=None)
+
+
+async def _setup_with_location_sensors_enabled(hass) -> None:
+    FakeWarmup4IE.tariffs = {"loc1": {"electricity": ELECTRICITY, "gas": GAS}}
+    FakeWarmup4IE.tariff_types = {"loc1": "dual"}
+    config_entry = await _setup(hass, _device())
+    registry = er.async_get(hass)
+    for entry in er.async_entries_for_config_entry(registry, config_entry.entry_id):
+        if entry.unique_id.startswith("warmup_location_"):
+            registry.async_update_entity(entry.entity_id, disabled_by=None)
     assert await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
-    return entity_id
 
 
-async def test_tariff_sensor_on_location_device(hass):
-    """Each location gets a device with a tariff sensor, disabled by default."""
-    FakeWarmup4IE.tariffs = {
-        "loc1": {"cost": "0.24", "low": "", "start": "00:00", "end": "00:00"}
-    }
+async def test_location_sensors_on_location_device(hass):
+    """Each location's device gets the tariff sensors, all disabled by default."""
+    FakeWarmup4IE.tariffs = {"loc1": {"electricity": ELECTRICITY, "gas": GAS}}
     config_entry = await _setup(hass, _device())
 
     registry = er.async_get(hass)
-    entity_id = registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, TARIFF_ENTITY_UNIQUE_ID
+    location_entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(registry, config_entry.entry_id)
+        if entry.unique_id.startswith("warmup_location_")
+    ]
+    assert {entry.unique_id for entry in location_entries} == {
+        f"warmup_location_loc1_{key}"
+        for fuel in ("electricity", "gas")
+        for key in (
+            f"{fuel}_rate",
+            f"{fuel}_standard_rate",
+            f"{fuel}_off_peak_rate",
+            f"{fuel}_off_peak_start",
+            f"{fuel}_off_peak_end",
+        )
+    } | {"warmup_location_loc1_tariff_type"}
+    assert all(
+        entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        for entry in location_entries
     )
-    entry = registry.async_get(entity_id)
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
-    device = dr.async_get(hass).async_get(entry.device_id)
+    device = dr.async_get(hass).async_get(location_entries[0].device_id)
     assert device.name == "Home"
     assert device.identifiers == {(DOMAIN, "location_loc1")}
     assert device.model == "Location"
     assert config_entry.entry_id == device.config_entry_id
 
 
-async def test_tariff_sensor_standard_rate(hass):
-    """With a single rate, the tariff is that rate per kWh in HA's currency."""
-    await hass.config.async_update(currency="GBP")
-    FakeWarmup4IE.tariffs = {
-        "loc1": {"cost": "0.24", "low": "", "start": "00:00", "end": "00:00"}
-    }
+async def test_location_sensor_values(hass, freezer):
+    """The tariff sensors show each rate, the off-peak hours and the tariff type."""
+    freezer.move_to("2026-11-26 12:00:00+00:00")
+    await hass.config.async_update(currency="GBP", time_zone="UTC")
+    await _setup_with_location_sensors_enabled(hass)
+
+    def state(key):
+        return hass.states.get(_location_entity_id(hass, key))
+
+    rate = state("electricity_rate")
+    assert rate.entity_id == "sensor.home_electricity_rate"
+    assert float(rate.state) == 0.24  # midday is outside 00:30-04:30
+    assert rate.attributes[ATTR_UNIT_OF_MEASUREMENT] == "GBP/kWh"
+    assert float(state("electricity_standard_rate").state) == 0.24
+    assert float(state("electricity_off_peak_rate").state) == 0.07
+    assert state("electricity_off_peak_start").state == "00:30"
+    assert state("electricity_off_peak_end").state == "04:30"
+
+    assert float(state("gas_rate").state) == 0.06
+    assert float(state("gas_standard_rate").state) == 0.06
+    assert state("gas_off_peak_rate").state == "unknown"
+    assert state("gas_off_peak_start").state == "unknown"
+    assert state("gas_off_peak_end").state == "unknown"
+
+    tariff_type = state("tariff_type")
+    assert tariff_type.state == "dual"
+    assert tariff_type.attributes["options"] == ["single", "dual"]
+
+
+async def test_location_sensor_rate_during_off_peak(hass, freezer):
+    """During the off-peak hours, the current rate is the off-peak rate."""
+    freezer.move_to("2026-11-26 01:00:00+00:00")
+    await hass.config.async_update(time_zone="UTC")
+    await _setup_with_location_sensors_enabled(hass)
+
+    rate = hass.states.get(_location_entity_id(hass, "electricity_rate"))
+    assert float(rate.state) == 0.07
+
+
+async def test_location_sensors_without_tariff(hass):
+    """A location without tariffs has unknown values."""
     config_entry = await _setup(hass, _device())
-    entity_id = await _enable_tariff(hass, config_entry)
-
-    state = hass.states.get(entity_id)
-    assert entity_id == "sensor.home_electricity_tariff"
-    assert float(state.state) == 0.24
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "GBP/kWh"
-    assert state.attributes["standard_rate"] == 0.24
-    assert state.attributes["low_rate"] is None
-
-
-async def test_tariff_sensor_without_tariff(hass):
-    """A location without a tariff has an unknown rate."""
-    config_entry = await _setup(hass, _device())
-    entity_id = await _enable_tariff(hass, config_entry)
+    registry = er.async_get(hass)
+    entity_id = _location_entity_id(hass, "electricity_rate")
+    registry.async_update_entity(entity_id, disabled_by=None)
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "unknown"
 

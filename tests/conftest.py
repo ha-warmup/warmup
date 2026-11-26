@@ -23,6 +23,7 @@ def reset_fake_warmup4ie():
     FakeWarmup4IE.devices = []
     FakeWarmup4IE.rejected_updates = 0
     FakeWarmup4IE.tariffs = {}
+    FakeWarmup4IE.tariff_types = {}
     FakeWarmup4IE.relogin_should_succeed = True
     FakeWarmup4IE.relogin_count = 0
     yield
@@ -31,6 +32,7 @@ def reset_fake_warmup4ie():
     FakeWarmup4IE.devices = []
     FakeWarmup4IE.rejected_updates = 0
     FakeWarmup4IE.tariffs = {}
+    FakeWarmup4IE.tariff_types = {}
     FakeWarmup4IE.relogin_should_succeed = True
     FakeWarmup4IE.relogin_count = 0
 

@@ -231,7 +231,14 @@ Each thermostat is a device in Home Assistant with a climate entity and these se
 
 A sensor whose probe the thermostat reports as faulty, usually because none is connected, is unavailable.
 
-Each Warmup location is also a device, with an **Electricity tariff** sensor (disabled by default): the rate per kWh that applies now, from the tariff set in the Warmup app. If the tariff has a cheaper rate with start and end times, the sensor shows the cheaper rate during those hours, and the standard rate otherwise. You can use it as the current-price entity in the Energy dashboard.
+Each Warmup location is also a device, and each thermostat's device is connected via it. The location device has sensors for the tariffs set in the Warmup app, all disabled by default:
+
+* **Electricity rate** and **Gas rate**: the rate per kWh that applies now, which is the off-peak rate during its hours and the standard rate otherwise. You can use these as the current-price entity in the Energy dashboard.
+* **Electricity standard rate**, **Electricity off-peak rate**, **Gas standard rate** and **Gas off-peak rate**
+* **Electricity off-peak start** and **end**, **Gas off-peak start** and **end** (HH:MM)
+* **Tariff type**: single or dual
+
+Rates are per kWh, in Home Assistant's currency.
 
 For further information on versions please see the
 [CHANGELOG](https://github.com/ha-warmup/warmup/blob/master/CHANGELOG.md)

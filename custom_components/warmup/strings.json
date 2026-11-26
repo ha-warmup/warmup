@@ -53,8 +53,42 @@
       "cost_today": {
         "name": "Cost today"
       },
-      "tariff": {
-        "name": "Electricity tariff"
+      "electricity_rate": {
+        "name": "Electricity rate"
+      },
+      "electricity_standard_rate": {
+        "name": "Electricity standard rate"
+      },
+      "electricity_off_peak_rate": {
+        "name": "Electricity off-peak rate"
+      },
+      "electricity_off_peak_start": {
+        "name": "Electricity off-peak start"
+      },
+      "electricity_off_peak_end": {
+        "name": "Electricity off-peak end"
+      },
+      "gas_rate": {
+        "name": "Gas rate"
+      },
+      "gas_standard_rate": {
+        "name": "Gas standard rate"
+      },
+      "gas_off_peak_rate": {
+        "name": "Gas off-peak rate"
+      },
+      "gas_off_peak_start": {
+        "name": "Gas off-peak start"
+      },
+      "gas_off_peak_end": {
+        "name": "Gas off-peak end"
+      },
+      "tariff_type": {
+        "name": "Tariff type",
+        "state": {
+          "single": "Single",
+          "dual": "Dual"
+        }
       }
     }
   }

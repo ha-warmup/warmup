@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfEnergy, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -109,8 +110,9 @@ async def async_setup_entry(
         for device in coordinator.data.values()
     }
     async_add_entities(
-        WarmupTariffSensor(coordinator, location_id, name)
+        WarmupLocationSensor(coordinator, location_id, name, description)
         for location_id, name in locations.items()
+        for description in LOCATION_SENSORS
     )
 
 
@@ -160,66 +162,140 @@ def _parse_time(value: str | None) -> time | None:
         return None
 
 
+def _off_peak_window(tariff: dict[str, Any] | None) -> tuple[time, time] | None:
+    """Return the start and end of the tariff's cheaper rate, if it has one."""
+    if not tariff or _to_float(tariff.get("low")) is None:
+        return None
+    start = _parse_time(tariff.get("start"))
+    end = _parse_time(tariff.get("end"))
+    if start is None or end is None or start == end:
+        return None
+    return start, end
+
+
 def current_rate(tariff: dict[str, Any] | None, now: time) -> float | None:
     """Return the tariff's rate per kWh at this time of day.
 
-    The cheaper ("low") rate applies from its start time until its end time,
+    The cheaper (off-peak) rate applies from its start time until its end time,
     which may be on the next day; the standard rate applies at other times.
     """
     if not tariff:
         return None
     standard = _to_float(tariff.get("cost"))
-    low = _to_float(tariff.get("low"))
-    start = _parse_time(tariff.get("start"))
-    end = _parse_time(tariff.get("end"))
-    if low is None or start is None or end is None or start == end:
+    if (window := _off_peak_window(tariff)) is None:
         return standard
+    start, end = window
     if start < end:
-        in_low_window = start <= now < end
+        off_peak = start <= now < end
     else:
-        in_low_window = now >= start or now < end
-    return low if in_low_window else standard
+        off_peak = now >= start or now < end
+    return _to_float(tariff.get("low")) if off_peak else standard
 
 
-class WarmupTariffSensor(CoordinatorEntity[WarmupCoordinator], SensorEntity):
-    """The electricity rate that applies now at a Warmup location."""
+def _off_peak_time(tariff: dict[str, Any] | None, index: int) -> str | None:
+    """Return the off-peak start (index 0) or end (index 1) as HH:MM."""
+    if (window := _off_peak_window(tariff)) is None:
+        return None
+    return window[index].strftime("%H:%M")
 
+
+@dataclass(frozen=True, kw_only=True)
+class WarmupLocationSensorEntityDescription(SensorEntityDescription):
+    """Describes a sensor for a Warmup location's tariff."""
+
+    # Called with the coordinator's client and the location id.
+    value_fn: Callable[[Any, int], StateType]
+    # True for a rate, whose unit is Home Assistant's currency per kWh.
+    is_rate: bool = False
+
+
+def _fuel_sensors(fuel: str) -> tuple[WarmupLocationSensorEntityDescription, ...]:
+    """Describe the rate sensors for one fuel's tariff."""
+
+    def tariff(client: Any, location_id: int) -> dict[str, Any] | None:
+        return client.get_location_tariff(location_id, fuel)
+
+    return (
+        WarmupLocationSensorEntityDescription(
+            key=f"{fuel}_rate",
+            translation_key=f"{fuel}_rate",
+            is_rate=True,
+            value_fn=lambda client, loc: current_rate(
+                tariff(client, loc), dt_util.now().time()
+            ),
+        ),
+        WarmupLocationSensorEntityDescription(
+            key=f"{fuel}_standard_rate",
+            translation_key=f"{fuel}_standard_rate",
+            is_rate=True,
+            value_fn=lambda client, loc: _to_float(
+                (tariff(client, loc) or {}).get("cost")
+            ),
+        ),
+        WarmupLocationSensorEntityDescription(
+            key=f"{fuel}_off_peak_rate",
+            translation_key=f"{fuel}_off_peak_rate",
+            is_rate=True,
+            value_fn=lambda client, loc: _to_float(
+                (tariff(client, loc) or {}).get("low")
+            ),
+        ),
+        WarmupLocationSensorEntityDescription(
+            key=f"{fuel}_off_peak_start",
+            translation_key=f"{fuel}_off_peak_start",
+            value_fn=lambda client, loc: _off_peak_time(tariff(client, loc), 0),
+        ),
+        WarmupLocationSensorEntityDescription(
+            key=f"{fuel}_off_peak_end",
+            translation_key=f"{fuel}_off_peak_end",
+            value_fn=lambda client, loc: _off_peak_time(tariff(client, loc), 1),
+        ),
+    )
+
+
+LOCATION_SENSORS: tuple[WarmupLocationSensorEntityDescription, ...] = (
+    *_fuel_sensors("electricity"),
+    *_fuel_sensors("gas"),
+    WarmupLocationSensorEntityDescription(
+        key="tariff_type",
+        translation_key="tariff_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=["single", "dual"],
+        value_fn=lambda client, loc: client.get_location_tariff_type(loc),
+    ),
+)
+
+
+class WarmupLocationSensor(CoordinatorEntity[WarmupCoordinator], SensorEntity):
+    """A tariff detail for a Warmup location."""
+
+    entity_description: WarmupLocationSensorEntityDescription
     _attr_has_entity_name = True
-    _attr_translation_key = "tariff"
-    _attr_suggested_display_precision = 2
     _attr_entity_registry_enabled_default = False
 
     def __init__(
-        self, coordinator: WarmupCoordinator, location_id: int, name: str
+        self,
+        coordinator: WarmupCoordinator,
+        location_id: int,
+        name: str,
+        description: WarmupLocationSensorEntityDescription,
     ) -> None:
         """Initialise the sensor for this location."""
         super().__init__(coordinator)
+        self.entity_description = description
         self._location_id = location_id
-        self._attr_unique_id = f"warmup_location_{location_id}_tariff"
+        self._attr_unique_id = f"warmup_location_{location_id}_{description.key}"
         self._attr_device_info = location_device_info(location_id, name)
-        # Warmup doesn't say which currency its tariff is in.
-        self._attr_native_unit_of_measurement = (
-            f"{coordinator.hass.config.currency}/{UnitOfEnergy.KILO_WATT_HOUR}"
+        if description.is_rate:
+            # Warmup doesn't say which currency its tariff is in.
+            self._attr_native_unit_of_measurement = (
+                f"{coordinator.hass.config.currency}/{UnitOfEnergy.KILO_WATT_HOUR}"
+            )
+            self._attr_suggested_display_precision = 3
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the tariff detail."""
+        return self.entity_description.value_fn(
+            self.coordinator.client, self._location_id
         )
-
-    @property
-    def _tariff(self) -> dict[str, Any] | None:
-        return self.coordinator.client.get_location_tariff(self._location_id)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the rate that applies now."""
-        return current_rate(self._tariff, dt_util.now().time())
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the standard and cheaper rates, and the cheaper rate's hours."""
-        tariff = self._tariff
-        if not tariff:
-            return None
-        return {
-            "standard_rate": _to_float(tariff.get("cost")),
-            "low_rate": _to_float(tariff.get("low")),
-            "low_rate_start": tariff.get("start") or None,
-            "low_rate_end": tariff.get("end") or None,
-        }

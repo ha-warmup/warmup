@@ -1,5 +1,7 @@
 """Tests for the Warmup sensor platform."""
 
+from datetime import time
+
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -15,10 +17,12 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfTemperature,
 )
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.warmup.const import DOMAIN
+from custom_components.warmup.sensor import current_rate
 
 from .common import TEST_PASSWORD, TEST_USERNAME, FakeWarmup4IE, make_device
 
@@ -154,3 +158,89 @@ async def test_missing_energy_value(hass):
     await _setup(hass, device)
 
     assert hass.states.get(_entity_id(hass, "energy_today")).state == "unknown"
+
+
+TARIFF_ENTITY_UNIQUE_ID = "warmup_location_loc1_tariff"
+
+
+async def _enable_tariff(hass, config_entry) -> str:
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, TARIFF_ENTITY_UNIQUE_ID
+    )
+    registry.async_update_entity(entity_id, disabled_by=None)
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return entity_id
+
+
+async def test_tariff_sensor_on_location_device(hass):
+    """Each location gets a device with a tariff sensor, disabled by default."""
+    FakeWarmup4IE.tariffs = {
+        "loc1": {"cost": "0.24", "low": "", "start": "00:00", "end": "00:00"}
+    }
+    config_entry = await _setup(hass, _device())
+
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, TARIFF_ENTITY_UNIQUE_ID
+    )
+    entry = registry.async_get(entity_id)
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    device = dr.async_get(hass).async_get(entry.device_id)
+    assert device.name == "Home"
+    assert device.identifiers == {(DOMAIN, "location_loc1")}
+    assert device.model == "Location"
+    assert config_entry.entry_id == device.config_entry_id
+
+
+async def test_tariff_sensor_standard_rate(hass):
+    """With a single rate, the tariff is that rate per kWh in HA's currency."""
+    await hass.config.async_update(currency="GBP")
+    FakeWarmup4IE.tariffs = {
+        "loc1": {"cost": "0.24", "low": "", "start": "00:00", "end": "00:00"}
+    }
+    config_entry = await _setup(hass, _device())
+    entity_id = await _enable_tariff(hass, config_entry)
+
+    state = hass.states.get(entity_id)
+    assert entity_id == "sensor.home_electricity_tariff"
+    assert float(state.state) == 0.24
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "GBP/kWh"
+    assert state.attributes["standard_rate"] == 0.24
+    assert state.attributes["low_rate"] is None
+
+
+async def test_tariff_sensor_without_tariff(hass):
+    """A location without a tariff has an unknown rate."""
+    config_entry = await _setup(hass, _device())
+    entity_id = await _enable_tariff(hass, config_entry)
+
+    assert hass.states.get(entity_id).state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("start", "end", "now", "expected"),
+    [
+        ("00:30", "04:30", time(0, 30), 0.07),  # start of window
+        ("00:30", "04:30", time(4, 29), 0.07),
+        ("00:30", "04:30", time(4, 30), 0.24),  # end is exclusive
+        ("00:30", "04:30", time(12, 0), 0.24),
+        ("23:30", "05:30", time(23, 45), 0.07),  # window past midnight
+        ("23:30", "05:30", time(2, 0), 0.07),
+        ("23:30", "05:30", time(12, 0), 0.24),
+        ("00:00", "00:00", time(2, 0), 0.24),  # no window
+    ],
+)
+def test_current_rate(start, end, now, expected):
+    """The cheaper rate applies inside its window, the standard rate outside."""
+    tariff = {"cost": "0.24", "low": "0.07", "start": start, "end": end}
+    assert current_rate(tariff, now) == expected
+
+
+def test_current_rate_without_low_rate():
+    """Without a cheaper rate, the standard rate always applies."""
+    tariff = {"cost": "0.24", "low": "", "start": "00:30", "end": "04:30"}
+    assert current_rate(tariff, time(1, 0)) == 0.24
+    assert current_rate(None, time(1, 0)) is None

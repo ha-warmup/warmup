@@ -52,6 +52,9 @@
       },
       "cost_today": {
         "name": "Cost today"
+      },
+      "tariff": {
+        "name": "Electricity tariff"
       }
     }
   }

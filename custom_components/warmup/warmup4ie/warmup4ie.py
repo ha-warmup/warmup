@@ -89,6 +89,7 @@ class Warmup4IE:
         self.setup_finished = False
         token_ok = self.connect()
         self._locations = {}
+        self._location_tariffs = {}
         self._rooms = {}
         self._all_devices = {}
         self.update_all_devices()
@@ -201,6 +202,15 @@ class Warmup4IE:
     def get_all_devices(self):
         return self._all_devices
 
+    def get_location_tariff(self, location_id):
+        """Return the location's electricity tariff as reported by Warmup.
+
+        A dict with ``cost`` (standard rate per kWh), ``low`` (cheaper rate per
+        kWh, empty if none) and ``start``/``end`` (HH:MM window for the cheaper
+        rate), or None if the location has no tariff.
+        """
+        return self._location_tariffs.get(location_id)
+
     def get_location_id(self, location_name):
         for l_id, l_name in self._locations.items():
             if l_name == location_name:
@@ -241,6 +251,7 @@ class Warmup4IE:
             "allLocations: locations { "
             "id "
             "name "
+            "electricity { cost low start end } "
             "rooms{ "
             "id "
             "roomName "
@@ -289,6 +300,7 @@ class Warmup4IE:
 
         for location in locations:
             self._locations[location["id"]] = location["name"]
+            self._location_tariffs[location["id"]] = location.get("electricity")
             for room in location["rooms"]:
                 self._rooms[room["id"]] = room["roomName"]
                 for thermostat in room["thermostat4ies"]:

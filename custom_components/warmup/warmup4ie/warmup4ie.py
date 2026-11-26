@@ -406,6 +406,49 @@ class Warmup4IE:
             request,
         )
 
+    def _send_room_mutation(self, description, mutation, location_id, room_id):
+        """Run a GraphQL mutation that acts on one room and returns a Boolean.
+
+        Raises WarmupCommandError if Warmup doesn't accept it.
+        """
+        if self._warmup_access_token is None:
+            raise WarmupCommandError(f"{description}: not logged in")
+        body = {
+            "query": f"mutation {{ {mutation}(lid: {int(location_id)}, "
+            f"rid: {int(room_id)}) }}"
+        }
+        response = requests.post(url=self.URL, headers=self._v2_headers(), json=body)
+        try:
+            data = response.json()
+            accepted = (
+                data.get("status") == "success"
+                and not data.get("errors")
+                and data["data"][mutation] is True
+            )
+        except ValueError, KeyError, TypeError, AttributeError:
+            accepted = False
+        if response.status_code != 200 or not accepted:
+            raise WarmupCommandError(
+                f"{description}: Warmup responded with HTTP "
+                f"{response.status_code}, {response.text[:200]}"
+            )
+        _LOGGER.debug("%s: succeeded", description)
+
+    def set_room_to_off(self, location_id, room_id):
+        """Turn off one room."""
+        self._send_room_mutation(
+            f"Turning off room {room_id}", "deviceOff", location_id, room_id
+        )
+
+    def set_room_to_frost(self, location_id, room_id):
+        """Set one room to frost protection."""
+        self._send_room_mutation(
+            f"Setting room {room_id} to frost protection",
+            "deviceFrost",
+            location_id,
+            room_id,
+        )
+
     def set_location_to_frost(self, location_id):
         self._set_location_mode(location_id, "frost")
 
@@ -606,6 +649,14 @@ class Warmup4IEDevice:
     def set_temperature_to_manual(self):
         """Hold the room's fixed temperature."""
         self._warmup4ie_account.set_temperature_to_manual(self._room_id)
+
+    def set_room_to_off(self):
+        """Turn off this room only."""
+        self._warmup4ie_account.set_room_to_off(self._loc_id, self._room_id)
+
+    def set_room_to_frost(self):
+        """Set this room only to frost protection."""
+        self._warmup4ie_account.set_room_to_frost(self._loc_id, self._room_id)
 
     def set_location_to_frost(self):
         """Set the room's whole location to frost protection."""

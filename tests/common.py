@@ -42,6 +42,16 @@ class FakeWarmup4IEDevice(Warmup4IEDevice):
         self.commands.append(("set_temperature_to_manual",))
         self.run_mode = "fixed"
 
+    def set_room_to_off(self):
+        self._check_command()
+        self.commands.append(("set_room_to_off",))
+        self.run_mode = "off"
+
+    def set_room_to_frost(self):
+        self._check_command()
+        self.commands.append(("set_room_to_frost",))
+        self.run_mode = "frost"
+
     def set_location_to_frost(self):
         self._check_command()
         self.commands.append(("set_location_to_frost",))

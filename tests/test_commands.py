@@ -94,3 +94,40 @@ def test_rejected_room_mutation_raises(mock_post, response):
 
     with pytest.raises(warmup4ie.WarmupCommandError, match="Turning off room 39768"):
         _client().set_room_to_off(20595, 39768)
+
+
+@pytest.mark.parametrize(
+    ("method", "args", "query"),
+    [
+        ("set_all_rooms_to_off", (20595,), "mutation { deviceOff(lid: 20595) }"),
+        ("set_all_rooms_to_frost", (20595,), "mutation { deviceFrost(lid: 20595) }"),
+        (
+            "set_all_rooms_to_program",
+            (20595,),
+            "mutation { deviceProgram(lid: 20595) }",
+        ),
+        (
+            "cancel_all_overrides",
+            (20595,),
+            "mutation { cancelAllOverrides(lid: 20595) }",
+        ),
+        ("cancel_holiday", (20595,), "mutation { cancelHoliday(lid: 20595) }"),
+        (
+            "set_holiday",
+            (20595, 10.0, "2026-12-01 10:00:00", "2026-12-08 18:00:00"),
+            "mutation { deviceHoliday(lid: 20595, temperature: 100, "
+            'start: "2026-12-01 10:00:00", end: "2026-12-08 18:00:00") }',
+        ),
+    ],
+)
+@patch(PATCH_POST)
+def test_location_mutation(mock_post, method, args, query):
+    """Location-wide commands send their GraphQL mutation without a room id."""
+    mutation = query.split("{ ")[1].split("(")[0]
+    mock_post.return_value = _make_response(
+        200, {"status": "success", "data": {mutation: True}}
+    )
+
+    getattr(_client(), method)(*args)
+
+    assert mock_post.call_args.kwargs["json"] == {"query": query}

@@ -1,12 +1,54 @@
 set_override:
-  description: Set or update a temperature override.
+  target:
+    entity:
+      integration: warmup
+      domain: climate
   fields:
-    entity_id:
-      description: Name of Warmup entity.
-      example: "Kitchen"
     temperature:
-      description: Temperature to set in 0.5 increments
-      example: "22.5"
+      required: true
+      example: 22.5
+      selector:
+        number:
+          min: 5
+          max: 30
+          step: 0.5
+          mode: box
     until:
-      description: When the override should end, enclose in quotes otherwise the colon causes problems. Defaults to 1 hour from now.
       example: "14:00"
+      selector:
+        text:
+set_holiday:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: warmup
+            model: Location
+    start:
+      required: true
+      selector:
+        datetime:
+    end:
+      required: true
+      selector:
+        datetime:
+    temperature:
+      required: true
+      example: 10
+      selector:
+        number:
+          min: 5
+          max: 30
+          step: 0.5
+          mode: box
+cancel_holiday:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: warmup
+            model: Location

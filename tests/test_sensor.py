@@ -183,7 +183,7 @@ async def _setup_with_location_sensors_enabled(hass) -> None:
 
 
 async def test_location_sensors_on_location_device(hass):
-    """Each location's device gets the tariff sensors, all disabled by default."""
+    """Each location's device gets its sensors; only the tariff ones start disabled."""
     FakeWarmup4IE.tariffs = {"loc1": {"electricity": ELECTRICITY, "gas": GAS}}
     config_entry = await _setup(hass, _device())
 
@@ -192,6 +192,7 @@ async def test_location_sensors_on_location_device(hass):
         entry
         for entry in er.async_entries_for_config_entry(registry, config_entry.entry_id)
         if entry.unique_id.startswith("warmup_location_")
+        and entry.domain == SENSOR_DOMAIN
     ]
     assert {entry.unique_id for entry in location_entries} == {
         f"warmup_location_loc1_{key}"
@@ -203,11 +204,29 @@ async def test_location_sensors_on_location_device(hass):
             f"{fuel}_off_peak_start",
             f"{fuel}_off_peak_end",
         )
-    } | {"warmup_location_loc1_tariff_type"}
-    assert all(
-        entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-        for entry in location_entries
-    )
+    } | {
+        f"warmup_location_loc1_{key}"
+        for key in (
+            "tariff_type",
+            "holiday_start",
+            "holiday_end",
+            "holiday_temperature",
+            "location_mode",
+        )
+    }
+    enabled_by_default = {
+        "warmup_location_loc1_holiday_start",
+        "warmup_location_loc1_holiday_end",
+        "warmup_location_loc1_holiday_temperature",
+        "warmup_location_loc1_location_mode",
+    }
+    for entry in location_entries:
+        if entry.unique_id in enabled_by_default:
+            assert entry.disabled_by is None, entry.unique_id
+        else:
+            assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION, (
+                entry.unique_id
+            )
 
     device = dr.async_get(hass).async_get(location_entries[0].device_id)
     assert device.name == "Home"

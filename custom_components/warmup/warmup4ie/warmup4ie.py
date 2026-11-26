@@ -511,6 +511,9 @@ class Warmup4IEDevice:
         self.is_fault_air = False
         self.is_fault_floor_1 = False
         self.is_fault_floor_2 = False
+        # The room and thermostat data from the latest update, as Warmup sent it.
+        self.raw_room = None
+        self.raw_thermostat = None
 
     def get_run_mode(self):
         """return current mode, e.g. 'off', 'fixed', 'prog'."""
@@ -518,6 +521,8 @@ class Warmup4IEDevice:
 
     def update_room(self, room, thermostat):
         """Update room/device data for the given room name."""
+        self.raw_room = room
+        self.raw_thermostat = thermostat
         self.target_temperature = int(room["targetTemp"]) / 10
         self.current_temperature = int(room["currentTemp"]) / 10
         self.min_temp = int(thermostat["minTemp"]) / 10

@@ -151,6 +151,14 @@ If you are winding up having to do multiple restarts because Home Assistant won'
 
 Alternatively, with the menu restructuring, the menu entry for _Stop Server_ isn't accessible.  However you can use the keyboard short cut 'c' and type restart to find that choice. Once the server has stopped you can move the config entry in and do a `ha core start` 
 
+#### Diagnostics
+
+When reporting a problem, attach the integration's diagnostics: go to
+**Settings -> Devices & Services -> Warmup**, open the menu on the entry, and
+choose **Download diagnostics**. The file has the data Warmup sends for each
+thermostat and your location's tariffs, with your email, password, location
+names and serial numbers removed.
+
 #### Debugging flags
 
 If you do encounter issues, here are the logger settings in the Home Assistant configuration file you use to set debug or other levels of logging.

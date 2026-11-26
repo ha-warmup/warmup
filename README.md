@@ -222,6 +222,15 @@ temperature plus other values from the thermostat and setting the target
 temperature, switching between manual, automatic and frost protection
 mode, switching the device off, and setting a temporary override.
 
+Each thermostat is a device in Home Assistant with a climate entity and these sensors:
+
+* **Floor temperature** and **Floor temperature 2**: the floor probes. Floor temperature 2 starts disabled when the thermostat has no second probe connected; enable it in the device page if you add one.
+* **Air temperature**
+* **Energy today** (kWh): resets at midnight, and can be added to the Energy dashboard.
+* **Cost today**: today's energy at the tariff set in the Warmup app, in Home Assistant's currency.
+
+A sensor whose probe the thermostat reports as faulty, usually because none is connected, is unavailable.
+
 For further information on versions please see the
 [CHANGELOG](https://github.com/ha-warmup/warmup/blob/master/CHANGELOG.md)
 

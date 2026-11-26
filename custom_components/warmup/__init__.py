@@ -15,7 +15,7 @@ from .warmup4ie import Warmup4IE
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
 
 type WarmupConfigEntry = ConfigEntry[WarmupCoordinator]
 

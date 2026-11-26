@@ -35,5 +35,24 @@
       "title": "Warmup YAML configuration is deprecated",
       "description": "Configuring Warmup ({username}) via `climate:` in `configuration.yaml` is deprecated and has been automatically imported as a config entry. Remove the `platform: warmup` entry for {username} from your `configuration.yaml` and restart Home Assistant."
     }
+  },
+  "entity": {
+    "sensor": {
+      "floor_temperature": {
+        "name": "Floor temperature"
+      },
+      "floor_temperature_2": {
+        "name": "Floor temperature 2"
+      },
+      "air_temperature": {
+        "name": "Air temperature"
+      },
+      "energy_today": {
+        "name": "Energy today"
+      },
+      "cost_today": {
+        "name": "Cost today"
+      }
+    }
   }
 }

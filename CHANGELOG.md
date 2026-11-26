@@ -14,6 +14,8 @@ are based on date using format YYYY.M.D (no leading zeroes)
 
 Recent features from development that have not been formally released yet:
 
+## 2026.11.26 release
+
 ### Added
 
 * Diagnostics download (Settings -> Devices & Services -> Warmup -> Download diagnostics) with the raw Warmup data for each thermostat and the location tariffs; the account email, password, location names and serial numbers are redacted

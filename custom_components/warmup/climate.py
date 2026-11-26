@@ -10,7 +10,6 @@ from typing import Any
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     PRESET_AWAY,
-    PRESET_BOOST,
     PRESET_HOME,
     ClimateEntityFeature,
     HVACAction,
@@ -73,7 +72,7 @@ SUPPORT_FLAGS = (
     | ClimateEntityFeature.TURN_OFF
 )
 SUPPORT_HVAC_HEAT = [HVACMode.HEAT, HVACMode.AUTO, HVACMode.OFF]
-SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME, PRESET_BOOST]
+SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME]
 
 # Kept only so that users who still have `climate: - platform: warmup`
 # in configuration.yaml don't get a broken config on upgrade. The platform
